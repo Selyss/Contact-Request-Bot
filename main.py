@@ -1,27 +1,28 @@
 import os
+from nextcord import PermissionOverwrite, TextChannel
 from typing import List
 import nextcord
 from nextcord.ext import commands
+from nextcord.ext.commands import Bot
 from nextcord import SlashOption
 from dotenv import load_dotenv
 
 load_dotenv()
 
 TOKEN = os.getenv("BOT")
+EMBED_COLOR = 0xfffe88ff
 
 intents = nextcord.Intents.default()
 intents.message_content = True
 
 print("[System] Beginning load...")
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = Bot(command_prefix="!", intents=intents)
+bot.load_extension("cogs.ticket")
 
 @bot.event
 async def on_ready():
     print(f"[System] Logged in as {bot.user.name}.")
 
-@bot.command()
-async def ping(ctx):
-    await ctx.reply("pong!")
 
 if not TOKEN:
     print("[System] Missing TOKEN environment variable.")
