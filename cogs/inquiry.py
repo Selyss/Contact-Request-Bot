@@ -2,7 +2,7 @@ from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 import nextcord
 
-EMBED_COLOR = 0xff88ff
+EMBED_COLOR = 0xFF88FF
 
 
 class QuestionForm(nextcord.ui.Modal):
@@ -24,11 +24,8 @@ class QuestionForm(nextcord.ui.Modal):
     async def callback(self, interaction: nextcord.Interaction) -> None:
         response = "Placeholder."
         if self.details.value != "":
-            response += (
-                "response"
-            )
+            response += "response"
         await interaction.send(response)
-
 
 
 class Inquiry(Cog):
@@ -52,12 +49,15 @@ class Inquiry(Cog):
             async def btn_callback(interaction):
                 await interaction.response.send_modal(QuestionForm())
 
-            btn = nextcord.ui.Button(label="📝 Open Inquiry", style=nextcord.ButtonStyle.blurple)
+            btn = nextcord.ui.Button(
+                label="📝 Open Inquiry", style=nextcord.ButtonStyle.blurple
+            )
             btn.callback = btn_callback
             view = nextcord.ui.View()
             view.add_item(btn)
 
             await ctx.channel.send(embed=em, view=view)
+
 
 def setup(bot: Bot) -> None:
     bot.add_cog(Inquiry(bot))
