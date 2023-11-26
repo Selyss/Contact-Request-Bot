@@ -31,13 +31,7 @@ class QuestionForm(nextcord.ui.Modal):
             )
         await interaction.send(response)
 
-class InquiryButton(nextcord.ui.Button):
-    def __init__(self):
-        super().__init__(
-            label="📝 Open Inquiry",
-            custom_id="open_inquiry",
-            style=nextcord.ButtonStyle.primary
-        )
+
 
 class Inquiry(Cog):
     def __init__(self, bot: Bot) -> None:
@@ -56,9 +50,15 @@ class Inquiry(Cog):
                 """,
                 color=EMBED_COLOR,
             )
-            button = InquiryButton()
+
+            async def btn_callback(interaction):
+                await interaction.response.send_modal(QuestionForm())
+
+            btn = nextcord.ui.Button(label="📝 Open Inquiry", style=nextcord.ButtonStyle.blurple)
+            btn.callback = btn_callback
             view = nextcord.ui.View()
-            view.add_item(button)
+            view.add_item(btn)
+
             await ctx.channel.send(embed=em, view=view)
 
 def setup(bot: Bot) -> None:
