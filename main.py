@@ -17,7 +17,7 @@ intents.message_content = True
 
 print("[System] Beginning load...")
 bot = Bot(command_prefix="!", intents=intents)
-bot.load_extension("cogs.ticket")
+bot.load_extension("cogs.inquiry")
 
 @bot.event
 async def on_ready():
