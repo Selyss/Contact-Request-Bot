@@ -22,10 +22,10 @@ class QuestionForm(nextcord.ui.Modal):
         self.add_item(self.details)
 
     async def callback(self, interaction: nextcord.Interaction) -> None:
-        response = f"Placeholder."
+        response = "Placeholder."
         if self.details.value != "":
             response += (
-                f"\nTheir pet can be recognized by this information:\n{self.details.value}"
+                "response"
             )
         await interaction.send(response)
 
