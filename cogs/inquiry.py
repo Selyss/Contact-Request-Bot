@@ -1,8 +1,6 @@
-from nextcord import Interaction, slash_command
+from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 import nextcord
-from nextcord.types.components import ButtonStyle
-from nextcord.ui import modal
 
 EMBED_COLOR = 0xff88ff
 

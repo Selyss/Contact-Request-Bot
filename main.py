@@ -1,10 +1,6 @@
 import os
-from nextcord import PermissionOverwrite, TextChannel
-from typing import List
 import nextcord
-from nextcord.ext import commands
 from nextcord.ext.commands import Bot
-from nextcord import SlashOption
 from dotenv import load_dotenv
 
 load_dotenv()
