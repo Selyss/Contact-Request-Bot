@@ -37,15 +37,16 @@ class Ticket(Cog):
             ephemeral=True,
         )
 
+    @slash_command(name="ticket")
     async def create_ticket(self, inter: nextcord.Interaction) -> None:
         category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
         new_channel = await category.create_text_channel(
-            inter.user.name,
-            overwrites=None,
-            reason=f"Made ticket for {inter.user.name}",
+            name=f"ticket-{inter.user.name}",
+            reason=f"Created ticket for {inter.user.id} - {inter.user.name}",
         )
-        await new_channel.send("This is your new channel!")
-        await interaction.response.send_message(f"Channel created: <#{new_channel.id}>")
+        await inter.response.send_message(
+            f"Ticket created: <#{new_channel.id}>", ephemeral=True
+        )
 
 
 def setup(bot: Bot) -> None:
