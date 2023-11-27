@@ -21,8 +21,9 @@ ADVERTISING_ROLE: int = 1096584186304942111
 class AdForm(nextcord.ui.Modal):
     def __init__(self) -> None:
         super().__init__(
-            "Advertisement Services",
-            timeout=5 * 60,  # 5 minutes
+            title="Advertisement Services",
+            custom_id="persistant_modal:adform",
+            timeout=None,
         )
 
         self.details = nextcord.ui.TextInput(
@@ -31,6 +32,7 @@ class AdForm(nextcord.ui.Modal):
             placeholder="Contact Reason",
             required=True,
             max_length=1800,
+            custom_id="persistant_modal:adform_details",
         )
         self.add_item(self.details)
 
@@ -74,8 +76,7 @@ class AdForm(nextcord.ui.Modal):
 class QuestionForm(nextcord.ui.Modal):
     def __init__(self):
         super().__init__(
-            "Contact Marlow",
-            timeout=5 * 60,  # 5 minutes
+            title="Contact Marlow", custom_id="persistant_modal:question", timeout=None
         )
 
         self.details = nextcord.ui.TextInput(
@@ -84,6 +85,7 @@ class QuestionForm(nextcord.ui.Modal):
             placeholder="Contact Reason",
             required=True,
             max_length=1800,
+            custom_id="persistent_modal:details",
         )
         self.add_item(self.details)
 
@@ -120,6 +122,12 @@ class QuestionForm(nextcord.ui.Modal):
 class Inquiry(Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+        self.persistent_modal_added = False
+
+    async def add_persistent_modal(self):
+        if not self.persistent_modal_added:
+            self.bot.add_view(AdForm())
+            self.persistent_modal_added = True
 
     @slash_command(name="deploy", description="Send inquiry embed")
     async def deploy(self, ctx) -> None:
