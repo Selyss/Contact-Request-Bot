@@ -15,16 +15,24 @@ class Ticket(Cog):
     async def set_log_channel(
         self,
         inter: nextcord.Interaction,
-        channel: TextChannel = SlashOption(
+        request_channel: TextChannel = SlashOption(
             description="channel to recieve requests",
-            required=True,
+            required=False,
+        ),
+        ad_channel: TextChannel = SlashOption(
+            description="channel to recieve advertisements",
+            required=False,
         ),
     ):
-        config["request_channel"] = channel.id
+        config["request_channel"] = request_channel.id
+        config["advertise_channel"] = ad_channel.id
         with open("config.json", "w") as config_file:
             json.dump(config, config_file, indent=4)
 
-        await inter.send(f"Request channel set to <#{channel.id}>.", ephemeral=True)
+        await inter.send(
+            f"Request channel set to <#{request_channel.id}>. Advertisement channel set to <#{ad_channel.id}>.",
+            ephemeral=True,
+        )
 
 
 def setup(bot: Bot) -> None:

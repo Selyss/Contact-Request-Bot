@@ -3,12 +3,18 @@ from nextcord.ext.commands import Bot, Cog
 import nextcord
 import json
 
+# FIXME: make deploy command embed persistant
 
 with open("config.json", "r") as config_file:
     config = json.load(config_file)
-    CHANNEL: int = config["request_channel"]
+    REQUEST_CHANNEL: int = config["request_channel"]
+    AD_CHANNEL: int = config["advertise_channel"]
 
+# TODO: add as config fields
 EMBED_COLOR = 0xFF88FF
+AD_EMBED_COLOR = 0x2ECC71
+MARLOW_ID = 630872658027872273
+ADVERTISING_ROLE = 1096584186304942111
 
 
 class AdForm(nextcord.ui.Modal):
@@ -29,32 +35,32 @@ class AdForm(nextcord.ui.Modal):
 
     async def callback(self, interaction: nextcord.Interaction) -> None:
         if isinstance(interaction.channel, nextcord.TextChannel):
-            target_channel = interaction.guild.get_channel(CHANNEL)
+            target_channel = interaction.guild.get_channel(AD_CHANNEL)
             em = nextcord.Embed()
+            em.color = AD_EMBED_COLOR
             em.set_author(icon_url=interaction.user.avatar, name=interaction.user.name)
-            em.add_field(name="**reason**", value=self.details.value)
+            em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
+            em.add_field(name="**reason**", value=self.details.value, inline=False)
             # TODO: add extra to footer
             em.set_footer(text=f"{interaction.user.id}")
 
-            async def btn_callback(interaction):
+            async def mark_paid(interaction):
                 await interaction.response.send_modal(QuestionForm())
 
-            async def ad_btn_callback(interaction):
-                await interaction.response.send_modal(AdForm())
-
-            accept = nextcord.ui.Button(
-                label="Accept", style=nextcord.ButtonStyle.green
+            paid = nextcord.ui.Button(
+                label="Mark Paid", style=nextcord.ButtonStyle.green
             )
-            reject = nextcord.ui.Button(label="Reject", style=nextcord.ButtonStyle.red)
 
-            accept.callback = btn_callback
-            reject.callback = ad_btn_callback
+            paid.callback = mark_paid
 
             view = nextcord.ui.View()
-            view.add_item(accept)
-            view.add_item(reject)
+            view.add_item(paid)
 
-            await target_channel.send(embed=em, view=view)
+            await target_channel.send(
+                content=f"<@{interaction.user.id}> <@{MARLOW_ID}> <@{ADVERTISING_ROLE}>",
+                embed=em,
+                view=view,
+            )
 
 
 class QuestionForm(nextcord.ui.Modal):
@@ -75,7 +81,7 @@ class QuestionForm(nextcord.ui.Modal):
 
     async def callback(self, interaction: nextcord.Interaction) -> None:
         if isinstance(interaction.channel, nextcord.TextChannel):
-            target_channel = interaction.guild.get_channel(CHANNEL)
+            target_channel = interaction.guild.get_channel(REQUEST_CHANNEL)
             em = nextcord.Embed()
             em.set_author(icon_url=interaction.user.avatar, name=interaction.user.name)
             em.add_field(name="**reason**", value=self.details.value)
