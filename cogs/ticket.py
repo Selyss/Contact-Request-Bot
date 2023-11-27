@@ -3,9 +3,6 @@ from nextcord.ext.commands import Bot, Cog
 import nextcord
 import json
 
-# TODO: add to config
-TICKET_CATEGORY: int = 1178415757378461727
-
 with open("config.json", "r") as config_file:
     config = json.load(config_file)
 
@@ -35,17 +32,6 @@ class Ticket(Cog):
         await inter.send(
             f"Request channel set to <#{request_channel.id}>. Advertisement channel set to <#{ad_channel.id}>.",
             ephemeral=True,
-        )
-
-    @slash_command(name="ticket")
-    async def create_ticket(self, inter: nextcord.Interaction) -> None:
-        category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
-        new_channel = await category.create_text_channel(
-            name=f"ticket-{inter.user.name}",
-            reason=f"Created ticket for {inter.user.id} - {inter.user.name}",
-        )
-        await inter.response.send_message(
-            f"Ticket created: <#{new_channel.id}>", ephemeral=True
         )
 
 
