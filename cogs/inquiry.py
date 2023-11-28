@@ -124,6 +124,14 @@ class QuestionForm(nextcord.ui.Modal):
 class Inquiry(Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+        self.persistent_modal_added = False
+
+    @Cog.listener()
+    async def on_ready(self):
+        if not self.persistent_modal_added:
+            self.bot.add_modal(AdForm())
+            self.bot.add_modal(QuestionForm())
+            self.persistent_modal_added = True
 
     @slash_command(name="deploy", description="Send inquiry embed")
     async def deploy(self, ctx) -> None:
