@@ -1,7 +1,9 @@
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
+from datetime import datetime
 import nextcord
 import json
+
 
 with open("config.json", "r") as config_file:
     config = json.load(config_file)
@@ -100,8 +102,9 @@ class AdForm(nextcord.ui.Modal):
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
             em.add_field(name="**reason**", value=self.details.value, inline=False)
-            # TODO: add extra to footer
-            em.set_footer(text=f"{inter.user.id}")
+            current_date = datetime.now().strftime("%m/%d/%Y")
+            current_time = datetime.now().strftime("%-I:%M %p")
+            em.set_footer(text=f"{inter.user.id} • {current_date} • {current_time}")
 
             await new_channel.send(
                 content=f"<@{inter.user.id}> <@{MARLOW_ID}> <@{ADVERTISING_ROLE}>",
@@ -134,8 +137,9 @@ class QuestionForm(nextcord.ui.Modal):
             em = nextcord.Embed()
             em.set_author(icon_url=interaction.user.avatar, name=interaction.user.name)
             em.add_field(name="**reason**", value=self.details.value)
-            # TODO: add extra to footer
-            em.set_footer(text=f"{interaction.user.id}")
+            current_date = datetime.now().strftime("%m/%d/%Y")
+            current_time = datetime.now().strftime("%-I:%M %p")
+            em.set_footer(text=f"{inter.user.id} • {current_date} • {current_time}")
 
             await target_channel.send(embed=em, view=RequestView())
 
