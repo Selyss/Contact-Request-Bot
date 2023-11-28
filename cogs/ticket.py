@@ -26,11 +26,14 @@ class Ticket(Cog):
     ):
         config["request_channel"] = request_channel.id
         config["advertise_channel"] = ad_channel.id
-        with open("config.json", "w") as config_file:
+        with open("config.json", "w", encoding="utf-8") as config_file:
             json.dump(config, config_file, indent=4)
 
         await inter.send(
-            f"Request channel set to <#{request_channel.id}>. Advertisement channel set to <#{ad_channel.id}>.",
+            f"""
+            Request channel set to <#{request_channel.id}>
+            Advertisement channel set to <#{ad_channel.id}>
+            """,
             ephemeral=True,
         )
 

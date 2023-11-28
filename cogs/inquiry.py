@@ -1,8 +1,8 @@
 from datetime import datetime
+import json
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 import nextcord
-import json
 
 
 with open("config.json", "r", encoding="utf-8") as config_file:
@@ -137,11 +137,11 @@ class QuestionForm(nextcord.ui.Modal):
         )
         self.add_item(self.details)
 
-    async def callback(self, interaction: nextcord.Interaction) -> None:
-        if isinstance(interaction.channel, nextcord.TextChannel):
-            target_channel = interaction.guild.get_channel(REQUEST_CHANNEL)
+    async def callback(self, inter: nextcord.Interaction) -> None:
+        if isinstance(inter.channel, nextcord.TextChannel):
+            target_channel = inter.guild.get_channel(REQUEST_CHANNEL)
             em = nextcord.Embed()
-            em.set_author(icon_url=interaction.user.avatar, name=interaction.user.name)
+            em.set_author(icon_url=inter.user.avatar, name=interaction.user.name)
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
 
