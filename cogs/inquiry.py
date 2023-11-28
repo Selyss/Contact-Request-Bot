@@ -76,7 +76,9 @@ class AdForm(nextcord.ui.Modal):
 class QuestionForm(nextcord.ui.Modal):
     def __init__(self):
         super().__init__(
-            title="Contact Marlow", custom_id="persistant_modal:question", timeout=None
+            title="Contact Marlow",
+            custom_id="persistant_modal:question",
+            timeout=None,
         )
 
         self.details = nextcord.ui.TextInput(
@@ -122,12 +124,6 @@ class QuestionForm(nextcord.ui.Modal):
 class Inquiry(Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
-        self.persistent_modal_added = False
-
-    async def add_persistent_modal(self):
-        if not self.persistent_modal_added:
-            self.bot.add_view(AdForm())
-            self.persistent_modal_added = True
 
     @slash_command(name="deploy", description="Send inquiry embed")
     async def deploy(self, ctx) -> None:
