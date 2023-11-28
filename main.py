@@ -19,7 +19,7 @@ bot.load_extension("cogs.ticket")
 
 @bot.event
 async def on_ready():
-    print(f"[System] Logged in as {bot.user.name}.")
+    print(f"[System] Logged in as {bot.user.name}.")  # type: ignore
 
 
 if not TOKEN:

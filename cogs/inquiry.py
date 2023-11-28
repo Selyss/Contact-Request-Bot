@@ -1,11 +1,11 @@
+from datetime import datetime
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
-from datetime import datetime
 import nextcord
 import json
 
 
-with open("config.json", "r") as config_file:
+with open("config.json", "r", encoding="utf-8") as config_file:
     config = json.load(config_file)
     REQUEST_CHANNEL: int = config["request_channel"]
     AD_CHANNEL: int = config["advertise_channel"]
@@ -16,6 +16,14 @@ EMBED_COLOR = 0xFF88FF
 AD_EMBED_COLOR = 0x2ECC71
 MARLOW_ID: int = 630872658027872273
 ADVERTISING_ROLE: int = 1096584186304942111
+
+
+def get_date() -> str:
+    return datetime.now().strftime("%m/%d/%Y")
+
+
+def get_time() -> str:
+    return datetime.now().strftime("%-I:%M %p")
 
 
 class TicketView(nextcord.ui.View):
@@ -102,9 +110,7 @@ class AdForm(nextcord.ui.Modal):
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
             em.add_field(name="**reason**", value=self.details.value, inline=False)
-            current_date = datetime.now().strftime("%m/%d/%Y")
-            current_time = datetime.now().strftime("%-I:%M %p")
-            em.set_footer(text=f"{inter.user.id} • {current_date} • {current_time}")
+            em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
 
             await new_channel.send(
                 content=f"<@{inter.user.id}> <@{MARLOW_ID}> <@{ADVERTISING_ROLE}>",
@@ -137,9 +143,7 @@ class QuestionForm(nextcord.ui.Modal):
             em = nextcord.Embed()
             em.set_author(icon_url=interaction.user.avatar, name=interaction.user.name)
             em.add_field(name="**reason**", value=self.details.value)
-            current_date = datetime.now().strftime("%m/%d/%Y")
-            current_time = datetime.now().strftime("%-I:%M %p")
-            em.set_footer(text=f"{inter.user.id} • {current_date} • {current_time}")
+            em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
 
             await target_channel.send(embed=em, view=RequestView())
 
@@ -150,7 +154,7 @@ class Inquiry(Cog):
         self.persistent_modal_added = False
 
     @Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         if not self.persistent_modal_added:
             self.bot.add_view(RequestView())
             self.bot.add_view(TicketView())
@@ -158,8 +162,8 @@ class Inquiry(Cog):
             self.persistent_modal_added = True
 
     @slash_command(name="deploy", description="Send inquiry embed")
-    async def deploy(self, ctx) -> None:
-        if isinstance(ctx.channel, nextcord.TextChannel):
+    async def deploy(self, inter: nextcord.Interaction) -> None:
+        if isinstance(inter.channel, nextcord.TextChannel):
             em = nextcord.Embed(
                 title="📫 Contact Request",
                 description="""
@@ -171,7 +175,7 @@ class Inquiry(Cog):
                 color=EMBED_COLOR,
             )
 
-            await ctx.channel.send(embed=em, view=TicketView())
+            await inter.channel.send(embed=em, view=TicketView())
 
 
 def setup(bot: Bot) -> None:
