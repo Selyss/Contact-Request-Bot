@@ -141,7 +141,7 @@ class QuestionForm(nextcord.ui.Modal):
         if isinstance(inter.channel, nextcord.TextChannel):
             target_channel = inter.guild.get_channel(REQUEST_CHANNEL)
             em = nextcord.Embed()
-            em.set_author(icon_url=inter.user.avatar, name=interaction.user.name)
+            em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
 

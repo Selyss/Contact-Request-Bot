@@ -3,8 +3,8 @@ from nextcord import SlashOption, TextChannel, slash_command
 from nextcord.ext.commands import Bot, Cog
 import nextcord
 
-with open("config.json", "r", encoding="utf-8") as config_file:
-    config = json.load(config_file)
+with open("config.json", "r", encoding="utf-8") as conf:
+    config = json.load(conf)
 
 
 class Ticket(Cog):
