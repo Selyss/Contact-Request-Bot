@@ -1,4 +1,3 @@
-from types import new_class
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 import nextcord
@@ -15,7 +14,57 @@ EMBED_COLOR = 0xFF88FF
 AD_EMBED_COLOR = 0x2ECC71
 MARLOW_ID: int = 630872658027872273
 ADVERTISING_ROLE: int = 1096584186304942111
-# FIXME: make deploy command embed persistant
+
+
+class TicketView(nextcord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+
+    @nextcord.ui.button(
+        label="📝 Open Inquiry",
+        style=nextcord.ButtonStyle.blurple,
+        custom_id="ticket:inquiry",
+    )
+    async def open_inquiry(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        await inter.response.send_modal(QuestionForm())
+
+    @nextcord.ui.button(
+        label="📢 Advertisement",
+        style=nextcord.ButtonStyle.blurple,
+        custom_id="ticket:advertisement",
+    )
+    async def advertisement(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        await inter.response.send_modal(AdForm())
+
+
+# TODO: not implemented
+class RequestView(nextcord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+
+    @nextcord.ui.button(
+        label="Accept", style=nextcord.ButtonStyle.green, custom_id="ticket:accept"
+    )
+    async def accept(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        pass
+
+    @nextcord.ui.button(
+        label="Reject", style=nextcord.ButtonStyle.red, custom_id="ticket:reject"
+    )
+    async def reject(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        pass
+
+
+# TODO: not implemented
+class AdView(nextcord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+
+    @nextcord.ui.button(
+        label="Mark Paid", style=nextcord.ButtonStyle.green, custom_id="ticket:paid"
+    )
+    async def paid(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        pass
 
 
 class AdForm(nextcord.ui.Modal):
@@ -54,22 +103,10 @@ class AdForm(nextcord.ui.Modal):
             # TODO: add extra to footer
             em.set_footer(text=f"{inter.user.id}")
 
-            async def mark_paid(interaction):
-                await interaction.response.send_modal(QuestionForm())
-
-            paid = nextcord.ui.Button(
-                label="Mark Paid", style=nextcord.ButtonStyle.green
-            )
-
-            paid.callback = mark_paid
-
-            view = nextcord.ui.View()
-            view.add_item(paid)
-
             await new_channel.send(
                 content=f"<@{inter.user.id}> <@{MARLOW_ID}> <@{ADVERTISING_ROLE}>",
                 embed=em,
-                view=view,
+                view=AdView(),
             )
 
 
@@ -100,25 +137,7 @@ class QuestionForm(nextcord.ui.Modal):
             # TODO: add extra to footer
             em.set_footer(text=f"{interaction.user.id}")
 
-            async def btn_callback(interaction):
-                await interaction.response.send_modal(QuestionForm())
-
-            async def ad_btn_callback(interaction):
-                await interaction.response.send_modal(AdForm())
-
-            accept = nextcord.ui.Button(
-                label="Accept", style=nextcord.ButtonStyle.green
-            )
-            reject = nextcord.ui.Button(label="Reject", style=nextcord.ButtonStyle.red)
-
-            accept.callback = btn_callback
-            reject.callback = ad_btn_callback
-
-            view = nextcord.ui.View()
-            view.add_item(accept)
-            view.add_item(reject)
-
-            await target_channel.send(embed=em, view=view)
+            await target_channel.send(embed=em, view=RequestView())
 
 
 class Inquiry(Cog):
@@ -129,8 +148,9 @@ class Inquiry(Cog):
     @Cog.listener()
     async def on_ready(self):
         if not self.persistent_modal_added:
-            self.bot.add_modal(AdForm())
-            self.bot.add_modal(QuestionForm())
+            self.bot.add_view(RequestView())
+            self.bot.add_view(TicketView())
+            self.bot.add_view(AdView())
             self.persistent_modal_added = True
 
     @slash_command(name="deploy", description="Send inquiry embed")
@@ -147,27 +167,7 @@ class Inquiry(Cog):
                 color=EMBED_COLOR,
             )
 
-            async def btn_callback(interaction):
-                await interaction.response.send_modal(QuestionForm())
-
-            async def ad_btn_callback(interaction):
-                await interaction.response.send_modal(AdForm())
-
-            btn = nextcord.ui.Button(
-                label="📝 Open Inquiry", style=nextcord.ButtonStyle.blurple
-            )
-            ad_btn = nextcord.ui.Button(
-                label="📢 Advertisement", style=nextcord.ButtonStyle.blurple
-            )
-
-            btn.callback = btn_callback
-            ad_btn.callback = ad_btn_callback
-
-            view = nextcord.ui.View()
-            view.add_item(btn)
-            view.add_item(ad_btn)
-
-            await ctx.channel.send(embed=em, view=view)
+            await ctx.channel.send(embed=em, view=TicketView())
 
 
 def setup(bot: Bot) -> None:
