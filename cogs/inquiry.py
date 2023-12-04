@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
@@ -47,10 +47,54 @@ class TicketView(nextcord.ui.View):
         await inter.response.send_modal(AdForm())
 
 
-# TODO: not implemented
+class QuickResponse(nextcord.ui.Modal):
+    def __init__(self, person) -> None:
+        super().__init__(
+            title="Quick Response",
+            timeout=None,
+        )
+        self.person = person
+
+        self.details = nextcord.ui.TextInput(
+            label="Response",
+            style=nextcord.TextInputStyle.paragraph,
+            placeholder="Response here...",
+            required=True,
+            max_length=1800,
+        )
+        self.add_item(self.details)
+
+    async def callback(self, inter: nextcord.Interaction) -> None:
+        if isinstance(inter.channel, nextcord.TextChannel):
+            marlow = inter.guild.get_member(MARLOW_ID)
+
+            category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
+            new_channel = await category.create_text_channel(
+                name=f"ticket-{inter.user.name}",
+                reason=f"Created ticket for {inter.user.id} - {inter.user.name}",
+                topic=self.person.user.id,
+            )
+            await inter.response.send_message(
+                f"Ticket created: <#{new_channel.id}>", ephemeral=True
+            )
+            em = nextcord.Embed()
+            em.color = EMBED_COLOR
+            em.set_author(icon_url=marlow.user.avatar, name=marlow.user.name)
+            em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
+            em.add_field(name="**message**", value=self.details.value, inline=False)
+            em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
+
+            await new_channel.send(
+                content=f"<@{inter.user.id}>",
+                embed=em,
+                view=CloseView(),
+            )
+
+
 class RequestView(nextcord.ui.View):
-    def __init__(self) -> None:
+    def __init__(self, person) -> None:
         super().__init__(timeout=None)
+        self.person = person
 
     @nextcord.ui.button(
         label="Accept", style=nextcord.ButtonStyle.green, custom_id="ticket:accept"
@@ -59,13 +103,25 @@ class RequestView(nextcord.ui.View):
         pass
 
     @nextcord.ui.button(
-        label="Reject", style=nextcord.ButtonStyle.red, custom_id="ticket:reject"
+        label="Quick Response",
+        style=nextcord.ButtonStyle.blurple,
+        custom_id="ticket:quickresponse",
     )
-    async def reject(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+    async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        await inter.response.send_modal(QuickResponse(self.person))
+
+
+class CloseView(nextcord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+
+    @nextcord.ui.button(
+        label="Close", style=nextcord.ButtonStyle.red, custom_id="ticket:close"
+    )
+    async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         pass
 
 
-# TODO: not implemented
 class AdView(nextcord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None)
@@ -101,6 +157,7 @@ class AdForm(nextcord.ui.Modal):
             new_channel = await category.create_text_channel(
                 name=f"ticket-{inter.user.name}",
                 reason=f"Created ticket for {inter.user.id} - {inter.user.name}",
+                topic=inter.user.id,
             )
             await inter.response.send_message(
                 f"Ticket created: <#{new_channel.id}>", ephemeral=True
@@ -116,6 +173,9 @@ class AdForm(nextcord.ui.Modal):
                 content=f"<@{inter.user.id}> <@{MARLOW_ID}> <@{ADVERTISING_ROLE}>",
                 embed=em,
                 view=AdView(),
+            )
+            await new_channel.send(
+                content="""--------------------------------------------\n__**ADVERTISEMENT SERVICES**__\n\n🔔 $40 = Ping @ everyone with ad message/links\n\n🎁  $45 = Hosted Nitro Giveaway Ad with @ everyone ping (Nitro must be supplied by the customer)\n\n*These prices apply to the Vanilla PvP Community/Tier List*\n--------------------------------------------"""
             )
 
 
@@ -145,7 +205,10 @@ class QuestionForm(nextcord.ui.Modal):
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
 
-            await target_channel.send(embed=em, view=RequestView())
+            await target_channel.send(embed=em, view=RequestView(person=inter))
+            await inter.response.send_message(
+                """📫 **Your request has been sent!**""", ephemeral=True
+            )
 
 
 class Inquiry(Cog):
@@ -156,7 +219,7 @@ class Inquiry(Cog):
     @Cog.listener()
     async def on_ready(self) -> None:
         if not self.persistent_modal_added:
-            self.bot.add_view(RequestView())
+            self.bot.add_view(RequestView(None))
             self.bot.add_view(TicketView())
             self.bot.add_view(AdView())
             self.persistent_modal_added = True
