@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
@@ -51,7 +51,6 @@ class QuickResponse(nextcord.ui.Modal):
     def __init__(self, person) -> None:
         super().__init__(
             title="Quick Response",
-            custom_id="persistant_modal:quickresponse",
             timeout=None,
         )
         self.person = person
@@ -62,12 +61,13 @@ class QuickResponse(nextcord.ui.Modal):
             placeholder="Response here...",
             required=True,
             max_length=1800,
-            custom_id="persistant_modal:quickresponse_response",
         )
         self.add_item(self.details)
 
     async def callback(self, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
+            marlow = inter.guild.get_member(MARLOW_ID)
+
             category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
             new_channel = await category.create_text_channel(
                 name=f"ticket-{inter.user.name}",
@@ -78,7 +78,8 @@ class QuickResponse(nextcord.ui.Modal):
                 f"Ticket created: <#{new_channel.id}>", ephemeral=True
             )
             em = nextcord.Embed()
-            em.color = AD_EMBED_COLOR
+            em.color = EMBED_COLOR
+            em.set_author(icon_url=marlow.user.avatar, name=marlow.user.name)
             em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
             em.add_field(name="**message**", value=self.details.value, inline=False)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
@@ -86,7 +87,7 @@ class QuickResponse(nextcord.ui.Modal):
             await new_channel.send(
                 content=f"<@{inter.user.id}>",
                 embed=em,
-                view=AdView(),
+                view=CloseView(),
             )
 
 
@@ -103,11 +104,22 @@ class RequestView(nextcord.ui.View):
 
     @nextcord.ui.button(
         label="Quick Response",
-        style=nextcord.ButtonStyle.red,
-        custom_id="ticket:reject",
+        style=nextcord.ButtonStyle.blurple,
+        custom_id="ticket:quickresponse",
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         await inter.response.send_modal(QuickResponse(self.person))
+
+
+class CloseView(nextcord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+
+    @nextcord.ui.button(
+        label="Close", style=nextcord.ButtonStyle.red, custom_id="ticket:close"
+    )
+    async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        pass
 
 
 class AdView(nextcord.ui.View):
@@ -194,6 +206,9 @@ class QuestionForm(nextcord.ui.Modal):
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
 
             await target_channel.send(embed=em, view=RequestView(person=inter))
+            await inter.response.send_message(
+                """📫 **Your request has been sent!**""", ephemeral=True
+            )
 
 
 class Inquiry(Cog):
