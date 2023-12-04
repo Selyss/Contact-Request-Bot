@@ -66,7 +66,7 @@ class QuickResponse(nextcord.ui.Modal):
 
     async def callback(self, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
-            marlow = inter.guild.get_member(MARLOW_ID)
+            # marlow = inter.guild.get_member(MARLOW_ID)
 
             category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
             new_channel = await category.create_text_channel(
@@ -79,7 +79,7 @@ class QuickResponse(nextcord.ui.Modal):
             )
             em = nextcord.Embed()
             em.color = EMBED_COLOR
-            em.set_author(icon_url=marlow.user.avatar, name=marlow.user.name)
+            # em.set_author(icon_url=marlow.user.avatar, name=marlow.user.name)
             em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
             em.add_field(name="**message**", value=self.details.value, inline=False)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
