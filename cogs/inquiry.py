@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import json
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
+from nextcord.ext import commands
 import nextcord
 
 
@@ -29,6 +30,9 @@ def get_time() -> str:
 class TicketView(nextcord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None)
+        self.cooldown = commands.CooldownMapping.from_cooldown(
+            1, 60 * 1440, commands.BucketType.member  # 1 request per day
+        )
 
     @nextcord.ui.button(
         label="📝 Open Inquiry",
@@ -36,6 +40,13 @@ class TicketView(nextcord.ui.View):
         custom_id="ticket:inquiry",
     )
     async def open_inquiry(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        inter.message.author = inter.user
+        bucket = self.cooldown.get_bucket(inter.message)
+        retry = bucket.update_rate_limit()
+        if retry:
+            return await inter.response.send_message(
+                f"Slow down! Try again in {round(retry, 1)} seconds.", ephemeral=True
+            )
         await inter.response.send_modal(QuestionForm())
 
     @nextcord.ui.button(
@@ -44,6 +55,13 @@ class TicketView(nextcord.ui.View):
         custom_id="ticket:advertisement",
     )
     async def advertisement(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        inter.message.author = inter.user
+        bucket = self.cooldown.get_bucket(inter.message)
+        retry = bucket.update_rate_limit()
+        if retry:
+            return await inter.response.send_message(
+                f"Slow down! Try again in {round(retry, 1)} seconds.", ephemeral=True
+            )
         await inter.response.send_modal(AdForm())
 
 
