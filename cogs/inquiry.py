@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
@@ -9,10 +9,11 @@ import nextcord
 with open("config.json", "r", encoding="utf-8") as config_file:
     config = json.load(config_file)
     REQUEST_CHANNEL: int = config["request_channel"]
-    AD_CHANNEL: int = config["advertise_channel"]
+    # PAID_CATEGORY: int = config["paid_category"]
 
 # TODO: add as config fields
 TICKET_CATEGORY: int = 1178415757378461727
+PAID_CATEGORY: int = 1181391079698878555
 EMBED_COLOR = 0xFF88FF
 AD_EMBED_COLOR = 0x2ECC71
 MARLOW_ID: int = 630872658027872273
@@ -168,7 +169,8 @@ class AdView(nextcord.ui.View):
         label="Mark Paid", style=nextcord.ButtonStyle.green, custom_id="ticket:paid"
     )
     async def paid(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        pass
+        category = nextcord.utils.get(inter.guild.categories, id=PAID_CATEGORY)
+        await inter.channel.edit(category=category)
 
 
 class AdForm(nextcord.ui.Modal):
