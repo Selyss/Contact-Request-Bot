@@ -110,15 +110,35 @@ class QuickResponse(nextcord.ui.Modal):
 
 
 class RequestView(nextcord.ui.View):
-    def __init__(self, person) -> None:
+    def __init__(self, person, message) -> None:
         super().__init__(timeout=None)
         self.person = person
+        self.message = message
 
     @nextcord.ui.button(
         label="Accept", style=nextcord.ButtonStyle.green, custom_id="ticket:accept"
     )
     async def accept(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        pass
+        category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
+        new_channel = await category.create_text_channel(
+            name=f"ticket-{inter.user.name}",
+            reason=f"Created ticket for {inter.user.id} - {inter.user.name}",
+            topic=self.person.user.id,
+        )
+        await inter.response.send_message(
+            f"Ticket created: <#{new_channel.id}>", ephemeral=True
+        )
+        em = nextcord.Embed()
+        em.color = EMBED_COLOR
+        em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
+        em.add_field(name="**message**", value=self.message, inline=False)
+        em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
+
+        await new_channel.send(
+            content=f"<@{inter.user.id}>",
+            embed=em,
+            view=CloseView(),
+        )
 
     @nextcord.ui.button(
         label="Quick Response",
@@ -137,7 +157,7 @@ class CloseView(nextcord.ui.View):
         label="Close", style=nextcord.ButtonStyle.red, custom_id="ticket:close"
     )
     async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        pass
+        await inter.channel.delete()
 
 
 class AdView(nextcord.ui.View):
@@ -223,7 +243,9 @@ class QuestionForm(nextcord.ui.Modal):
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
 
-            await target_channel.send(embed=em, view=RequestView(person=inter))
+            await target_channel.send(
+                embed=em, view=RequestView(person=inter, message=self.details.value)
+            )
             await inter.response.send_message(
                 """📫 **Your request has been sent!**""", ephemeral=True
             )
@@ -237,7 +259,7 @@ class Inquiry(Cog):
     @Cog.listener()
     async def on_ready(self) -> None:
         if not self.persistent_modal_added:
-            self.bot.add_view(RequestView(None))
+            self.bot.add_view(RequestView(None, None))
             self.bot.add_view(TicketView())
             self.bot.add_view(AdView())
             self.persistent_modal_added = True
