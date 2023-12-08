@@ -5,6 +5,7 @@ from nextcord.ext.commands import Bot, Cog
 from nextcord.ext import commands
 import nextcord
 
+CLOSED_CATEGORY = 1182473403303723128
 
 with open("config.json", "r", encoding="utf-8") as config_file:
     config = json.load(config_file)
@@ -12,9 +13,10 @@ with open("config.json", "r", encoding="utf-8") as config_file:
     # PAID_CATEGORY: int = config["paid_category"]
 
 # TODO: add as config fields
-TICKET_CATEGORY: int = 1178415757378461727
+TICKET_CATEGORY: int = 1182104505270149221
 PAID_CATEGORY: int = 1181391079698878555
 EMBED_COLOR = 0xFF88FF
+EMBED_SUCCESS = 0x2ECC71
 AD_EMBED_COLOR = 0x2ECC71
 MARLOW_ID: int = 630872658027872273
 ADVERTISING_ROLE: int = 1096584186304942111
@@ -66,8 +68,25 @@ class TicketView(nextcord.ui.View):
         await inter.response.send_modal(AdForm())
 
 
+class CloseView(nextcord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+
+    @nextcord.ui.button(
+        label="Close", style=nextcord.ButtonStyle.red, custom_id="ticket:close"
+    )
+    async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        await self.inter.channel.send("Closing ticket...")
+        await self.inter.channel.edit(
+            category=self.inter.bot.get_channel(CLOSED_CATEGORY)
+        )
+        await self.inter.channel.set_permissions(
+            self.inter.author, read_messages=False, send_messages=False
+        )
+
+
 class QuickResponse(nextcord.ui.Modal):
-    def __init__(self, person) -> None:
+    def __init__(self, person: nextcord.Member) -> None:
         super().__init__(
             title="Quick Response",
             timeout=None,
@@ -89,8 +108,8 @@ class QuickResponse(nextcord.ui.Modal):
 
             category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
             new_channel = await category.create_text_channel(
-                name=f"ticket-{inter.user.name}",
-                reason=f"Created ticket for {inter.user.id} - {inter.user.name}",
+                name=f"ticket-{self.person.user.name}",
+                reason=f"Created ticket for {self.person.user.id} - {self.person.user.name}",
                 topic=self.person.user.id,
             )
             await inter.response.send_message(
@@ -101,12 +120,15 @@ class QuickResponse(nextcord.ui.Modal):
             # em.set_author(icon_url=marlow.user.avatar, name=marlow.user.name)
             em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
             em.add_field(name="**message**", value=self.details.value, inline=False)
-            em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
+            em.set_footer(text=f"{self.person.user.id} • {get_date()} • {get_time()}")
 
             await new_channel.send(
-                content=f"<@{inter.user.id}>",
+                content=f"<@{self.person.user.id}>",
                 embed=em,
                 view=CloseView(),
+            )
+            await new_channel.set_permissions(
+                self.person.user, send_messages=False, read_messages=True
             )
 
 
@@ -150,17 +172,6 @@ class RequestView(nextcord.ui.View):
         await inter.response.send_modal(QuickResponse(self.person))
 
 
-class CloseView(nextcord.ui.View):
-    def __init__(self) -> None:
-        super().__init__(timeout=None)
-
-    @nextcord.ui.button(
-        label="Close", style=nextcord.ButtonStyle.red, custom_id="ticket:close"
-    )
-    async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        await inter.channel.delete()
-
-
 class AdView(nextcord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None)
@@ -171,6 +182,12 @@ class AdView(nextcord.ui.View):
     async def paid(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         category = nextcord.utils.get(inter.guild.categories, id=PAID_CATEGORY)
         await inter.channel.edit(category=category)
+        em = nextcord.Embed()
+        em.color = EMBED_SUCCESS
+        em.title = ":checkmark: Payment Received"
+        em.description = """Thank you for your purchase!\nIf you haven't already, please send your advertisement message and ensure if you are using any custom/nitro-accessed Emojis that they are present within the Discord you are advertising (emojis from our server are fine, too).\n\nIf another advertisement was recently posted, out of courtesy it will be given a reasonable amount of uptime before yours is posted."""
+        em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
+        await inter.response.send_message(embed=em)
 
 
 class AdForm(nextcord.ui.Modal):
@@ -214,9 +231,11 @@ class AdForm(nextcord.ui.Modal):
                 embed=em,
                 view=AdView(),
             )
-            await new_channel.send(
-                content="""--------------------------------------------\n__**ADVERTISEMENT SERVICES**__\n\n🔔 $40 = Ping @ everyone with ad message/links\n\n🎁  $45 = Hosted Nitro Giveaway Ad with @ everyone ping (Nitro must be supplied by the customer)\n\n*These prices apply to the Vanilla PvP Community/Tier List*\n--------------------------------------------"""
-            )
+            emb = nextcord.Embed()
+            emb.color = 0xE67E22
+            emb.title = "__**Advertisement Services**__"
+            emb.description = """:bell: $40 = Ping @ everyone with ad message/links\n\n:gift: $45 = Hosted Nitro Giveaway Ad with @ everyone ping (Nitro must be supplied by the customer)\n\n*These prices apply to the Vanilla PvP Community/Tier List*"""
+            await new_channel.send(embed=emb)
 
 
 class QuestionForm(nextcord.ui.Modal):
