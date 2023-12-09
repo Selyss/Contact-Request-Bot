@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
@@ -34,7 +34,9 @@ class TicketView(nextcord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None)
         self.cooldown = commands.CooldownMapping.from_cooldown(
-            1, 60 * 1440, commands.BucketType.member  # 1 request per day
+            1,
+            60 * 1440,
+            commands.BucketType.member,  # 1 request per day
         )
 
     @nextcord.ui.button(
@@ -48,7 +50,7 @@ class TicketView(nextcord.ui.View):
         retry = bucket.update_rate_limit()
         if retry:
             return await inter.response.send_message(
-                f"Slow down! Try again in {round(retry, 1)} seconds.", ephemeral=True
+                f"Slow down! Try again in {int(retry // 3600)}h.", ephemeral=True
             )
         await inter.response.send_modal(QuestionForm())
 
@@ -63,7 +65,7 @@ class TicketView(nextcord.ui.View):
         retry = bucket.update_rate_limit()
         if retry:
             return await inter.response.send_message(
-                f"Slow down! Try again in {round(retry, 1)} seconds.", ephemeral=True
+                f"Slow down! Try again in {int(retry // 3600)}h.", ephemeral=True
             )
         await inter.response.send_modal(AdForm())
 
