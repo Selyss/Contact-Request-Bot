@@ -134,7 +134,9 @@ class QuickResponse(nextcord.ui.Modal):
 
 class RequestView(nextcord.ui.View):
     def __init__(self, person, message) -> None:
-        super().__init__(timeout=None)
+        super().__init__(
+            timeout=None,
+        )
         self.person = person
         self.message = message
 
@@ -283,6 +285,7 @@ class Inquiry(Cog):
             self.bot.add_view(RequestView(None, None))
             self.bot.add_view(TicketView())
             self.bot.add_view(AdView())
+            self.bot.add_view(CloseView())
             self.persistent_modal_added = True
 
     @slash_command(name="deploy", description="Send inquiry embed")
