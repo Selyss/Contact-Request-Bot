@@ -78,12 +78,10 @@ class CloseView(nextcord.ui.View):
         label="Close", style=nextcord.ButtonStyle.red, custom_id="ticket:close"
     )
     async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        await self.inter.channel.send("Closing ticket...")
-        await self.inter.channel.edit(
-            category=self.inter.bot.get_channel(CLOSED_CATEGORY)
-        )
-        await self.inter.channel.set_permissions(
-            self.inter.author, read_messages=False, send_messages=False
+        await inter.channel.send("Closing ticket...")
+        await inter.channel.edit(category=CLOSED_CATEGORY)
+        await inter.channel.set_permissions(
+            inter.author, read_messages=False, send_messages=False
         )
 
 
