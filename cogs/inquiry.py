@@ -75,7 +75,7 @@ class CloseView(nextcord.ui.View):
         super().__init__(timeout=None)
 
     @nextcord.ui.button(
-        label="Close", style=nextcord.ButtonStyle.red, custom_id="ticket:close"
+        label="Close", style=nextcord.ButtonStyle.red, custom_id="closeview:close"
     )
     async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         await inter.channel.send("Closing ticket...")
@@ -86,7 +86,7 @@ class CloseView(nextcord.ui.View):
 
 
 class QuickResponse(nextcord.ui.Modal):
-    def __init__(self, person: nextcord.Member) -> None:
+    def __init__(self, person) -> None:
         super().__init__(
             title="Quick Response",
             timeout=None,
@@ -134,20 +134,18 @@ class QuickResponse(nextcord.ui.Modal):
 
 class RequestView(nextcord.ui.View):
     def __init__(self, person, message) -> None:
-        super().__init__(
-            timeout=None,
-        )
+        super().__init__(timeout=None)
         self.person = person
         self.message = message
 
     @nextcord.ui.button(
-        label="Accept", style=nextcord.ButtonStyle.green, custom_id="ticket:accept"
+        label="Accept", style=nextcord.ButtonStyle.green, custom_id="requestview:accept"
     )
     async def accept(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
         new_channel = await category.create_text_channel(
-            name=f"ticket-{inter.user.name}",
-            reason=f"Created ticket for {inter.user.id} - {inter.user.name}",
+            name=f"ticket-{self.person.user.name}",
+            reason=f"Created ticket for {self.person.user.id} - {self.person.user.name}",
             topic=self.person.user.id,
         )
         await inter.response.send_message(
@@ -244,7 +242,7 @@ class QuestionForm(nextcord.ui.Modal):
     def __init__(self):
         super().__init__(
             title="Contact Marlow",
-            custom_id="persistant_modal:question",
+            custom_id="questionform:question",
             timeout=None,
         )
 
@@ -254,7 +252,7 @@ class QuestionForm(nextcord.ui.Modal):
             placeholder="Contact Reason",
             required=True,
             max_length=1800,
-            custom_id="persistent_modal:details",
+            custom_id="questionform:details",
         )
         self.add_item(self.details)
 
@@ -265,7 +263,6 @@ class QuestionForm(nextcord.ui.Modal):
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
-
             await target_channel.send(
                 embed=em, view=RequestView(person=inter, message=self.details.value)
             )
@@ -277,16 +274,22 @@ class QuestionForm(nextcord.ui.Modal):
 class Inquiry(Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
-        self.persistent_modal_added = False
+        self.persistent_modals_added = False
+        self.persistent_views_added = False
 
     @Cog.listener()
     async def on_ready(self) -> None:
-        if not self.persistent_modal_added:
+        if not self.persistent_modals_added:
+            self.bot.add_modal(QuestionForm())
+            self.bot.add_modal(AdForm())
+            self.persistent_modals_added = True
+
+        if not self.persistent_views_added:
             self.bot.add_view(RequestView(None, None))
             self.bot.add_view(TicketView())
             self.bot.add_view(AdView())
             self.bot.add_view(CloseView())
-            self.persistent_modal_added = True
+            self.persistent_views_added = True
 
     @slash_command(name="deploy", description="Send inquiry embed")
     async def deploy(self, inter: nextcord.Interaction) -> None:
