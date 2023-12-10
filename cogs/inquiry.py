@@ -164,28 +164,11 @@ class QuickResponse(nextcord.ui.Modal):
             )
 
 
-def create_button(button_id):
-    @nextcord.ui.button(
-        label="Quick Response",
-        style=nextcord.ButtonStyle.blurple,
-        custom_id=f"ticket:{button_id}",
-    )
-    async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        p = str(btn.custom_id).split(":")
-        await inter.response.send_modal(QuickResponse(person=p[1]))
-
-    return quickresponse
-
-
 class RequestView(nextcord.ui.View):
-    def __init__(self, person: int, message) -> None:
+    def __init__(self, person=None, message=None) -> None:
         super().__init__(timeout=None)
+        self.person = person
         self.message = message
-        try:
-            on_button_click = create_button(person)
-            self.add_item(on_button_click)
-        except TypeError:
-            pass
 
     @nextcord.ui.button(
         label="Accept", style=nextcord.ButtonStyle.green, custom_id="requestview:accept"
@@ -214,6 +197,15 @@ class RequestView(nextcord.ui.View):
             embed=em,
             view=CloseView(),
         )
+
+    @nextcord.ui.button(
+        label="Quick Response",
+        style=nextcord.ButtonStyle.blurple,
+        custom_id="ticket:ID",  ### SUB ID??
+    )
+    async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        p = str(btn.custom_id).split(":")
+        await inter.response.send_modal(QuickResponse(person=p[1]))
 
 
 class AdView(nextcord.ui.View):
@@ -353,7 +345,7 @@ class Inquiry(Cog):
             self.persistent_modals_added = True
 
         if not self.persistent_views_added:
-            # self.bot.add_view(RequestView(None, None))
+            self.bot.add_view(RequestView())
             self.bot.add_view(TicketView())
             self.bot.add_view(AdView())
             self.bot.add_view(CloseView())
