@@ -86,9 +86,10 @@ class CloseView(nextcord.ui.View):
 
 
 class QuickResponse(nextcord.ui.Modal):
-    def __init__(self, person) -> None:
+    def __init__(self, person=None):
         super().__init__(
             title="Quick Response",
+            custom_id="ticket:quickresponse",
             timeout=None,
         )
         self.person = person
@@ -99,6 +100,7 @@ class QuickResponse(nextcord.ui.Modal):
             placeholder="Response here...",
             required=True,
             max_length=1800,
+            custom_id="ticket:quickresponse_details",
         )
         self.add_item(self.details)
 
@@ -133,7 +135,7 @@ class QuickResponse(nextcord.ui.Modal):
 
 
 class RequestView(nextcord.ui.View):
-    def __init__(self, person, message) -> None:
+    def __init__(self, person=None, message=None):
         super().__init__(timeout=None)
         self.person = person
         self.message = message
@@ -155,10 +157,13 @@ class RequestView(nextcord.ui.View):
         em.color = EMBED_COLOR
         em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
         em.add_field(name="**message**", value=self.message, inline=False)
-        em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
+        em.set_footer(text=f"{self.person.user.id} • {get_date()} • {get_time()}")
 
+        await new_channel.set_permissions(
+            self.person.user, send_messages=True, read_messages=True
+        )
         await new_channel.send(
-            content=f"<@{inter.user.id}>",
+            content=f"<@{self.person.user.id}>",
             embed=em,
             view=CloseView(),
         )
@@ -169,7 +174,8 @@ class RequestView(nextcord.ui.View):
         custom_id="ticket:quickresponse",
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        await inter.response.send_modal(QuickResponse(self.person))
+        modal = QuickResponse(self.person)
+        await inter.response.send_modal(modal)
 
 
 class AdView(nextcord.ui.View):
@@ -225,7 +231,9 @@ class AdForm(nextcord.ui.Modal):
             em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
             em.add_field(name="**reason**", value=self.details.value, inline=False)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
-
+            await new_channel.set_permissions(
+                inter.user, send_messages=True, read_messages=True
+            )
             await new_channel.send(
                 content=f"<@{inter.user.id}> <@{MARLOW_ID}> <@{ADVERTISING_ROLE}>",
                 embed=em,
@@ -285,7 +293,7 @@ class Inquiry(Cog):
             self.persistent_modals_added = True
 
         if not self.persistent_views_added:
-            self.bot.add_view(RequestView(None, None))
+            self.bot.add_view(RequestView())
             self.bot.add_view(TicketView())
             self.bot.add_view(AdView())
             self.bot.add_view(CloseView())
