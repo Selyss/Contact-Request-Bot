@@ -163,3 +163,5 @@ cython_debug/
 marlow-bot/
 
 config.json
+
+data.json

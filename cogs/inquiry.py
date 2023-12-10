@@ -4,6 +4,8 @@ from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 from nextcord.ext import commands
 import nextcord
+from typing import Dict
+
 
 CLOSED_CATEGORY = 1182473403303723128
 
@@ -20,6 +22,33 @@ EMBED_SUCCESS = 0x2ECC71
 AD_EMBED_COLOR = 0x2ECC71
 MARLOW_ID: int = 630872658027872273
 ADVERTISING_ROLE: int = 1096584186304942111
+
+JSON_FILE = "data.json"
+
+requests_data: Dict[str, Dict[str, str]] = {}
+
+
+# Function to load data from the JSON file
+def load_data() -> None:
+    global requests_data
+    try:
+        with open(JSON_FILE, "r", encoding="utf-8") as json_file:
+            requests_data = json.load(json_file)
+            print(requests_data)
+    except FileNotFoundError:
+        print("NO JSON FILE")
+        # File doesn't exist, initialize with an empty dictionary
+        requests_data = {}
+
+
+# Function to save data to the JSON file
+def save_data() -> None:
+    with open(JSON_FILE, "w", encoding="utf-8") as json_file:
+        json.dump(requests_data, json_file, ensure_ascii=False, indent=4)
+
+
+# Load data when the bot starts
+load_data()
 
 
 def get_date() -> str:
@@ -86,7 +115,7 @@ class CloseView(nextcord.ui.View):
 
 
 class QuickResponse(nextcord.ui.Modal):
-    def __init__(self, person=None):
+    def __init__(self, person) -> None:
         super().__init__(
             title="Quick Response",
             custom_id="ticket:quickresponse",
@@ -133,7 +162,7 @@ class QuickResponse(nextcord.ui.Modal):
 
 
 class RequestView(nextcord.ui.View):
-    def __init__(self, person=None, message=None):
+    def __init__(self, person=None, message=None) -> None:
         super().__init__(timeout=None)
         self.person = person
         self.message = message
@@ -172,8 +201,7 @@ class RequestView(nextcord.ui.View):
         custom_id="ticket:quickresponse",
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        modal = QuickResponse(self.person)
-        await inter.response.send_modal(modal)
+        await inter.response.send_modal(QuickResponse(self.person))
 
 
 class AdView(nextcord.ui.View):
@@ -269,12 +297,33 @@ class QuestionForm(nextcord.ui.Modal):
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
+
+            save_request_data(inter.user.id, self.details.value)
+
             await target_channel.send(
                 embed=em, view=RequestView(person=inter, message=em)
             )
             await inter.response.send_message(
                 """📫 **Your request has been sent!**""", ephemeral=True
             )
+
+
+def save_request_data(user_id: int, request_details: str) -> None:
+    # Load existing data
+    load_data()
+
+    # Get or create a dictionary for the user's requests
+    user_requests = requests_data.setdefault(str(user_id), {})
+
+    # Add the request details to the user's requests
+    user_requests[f"request_{len(user_requests) + 1}"] = {
+        "timestamp": f"{get_date()} {get_time()}",
+        "details": request_details,
+        "response": None,  # Initialize response as None
+    }
+
+    # Save the data to the JSON file
+    save_data()
 
 
 class Inquiry(Cog):
