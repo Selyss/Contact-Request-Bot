@@ -34,7 +34,6 @@ def load_data() -> None:
     try:
         with open(JSON_FILE, "r", encoding="utf-8") as json_file:
             requests_data = json.load(json_file)
-            print(requests_data)
     except FileNotFoundError:
         print("NO JSON FILE")
         # File doesn't exist, initialize with an empty dictionary
@@ -115,7 +114,7 @@ class CloseView(nextcord.ui.View):
 
 
 class QuickResponse(nextcord.ui.Modal):
-    def __init__(self, person) -> None:
+    def __init__(self, person=None) -> None:
         super().__init__(
             title="Quick Response",
             custom_id="ticket:quickresponse",
@@ -135,11 +134,15 @@ class QuickResponse(nextcord.ui.Modal):
 
     async def callback(self, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
+            # FIXME: SWITCH TO GET MEMBER (DOCS)
+            mem = await inter.guild.fetch_member(self.person)
+            name = mem.name
+            id = mem.id
             category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
             new_channel = await category.create_text_channel(
-                name=f"ticket-{self.person.user.name}",
-                reason=f"Created ticket for {self.person.user.id} - {self.person.user.name}",
-                topic=self.person.user.id,
+                name=f"ticket-{name}",
+                reason=f"Created ticket for {id} - {name}",
+                topic=id,
             )
             await inter.response.send_message(
                 f"Ticket created: <#{new_channel.id}>", ephemeral=True
@@ -149,15 +152,15 @@ class QuickResponse(nextcord.ui.Modal):
             # em.set_author(icon_url=marlow.user.avatar, name=marlow.user.name)
             em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
             em.add_field(name="**message**", value=self.details.value, inline=False)
-            em.set_footer(text=f"{self.person.user.id} • {get_date()} • {get_time()}")
+            em.set_footer(text=f"{id} • {get_date()} • {get_time()}")
 
             await new_channel.send(
-                content=f"<@{self.person.user.id}>",
+                content=f"<@{id}>",
                 embed=em,
                 view=CloseView(),
             )
             await new_channel.set_permissions(
-                self.person.user, send_messages=False, read_messages=True
+                mem, send_messages=False, read_messages=True
             )
 
 
@@ -198,10 +201,11 @@ class RequestView(nextcord.ui.View):
     @nextcord.ui.button(
         label="Quick Response",
         style=nextcord.ButtonStyle.blurple,
-        custom_id="ticket:quickresponse",
+        custom_id="ticket:ID",  ### SUB ID??
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        await inter.response.send_modal(QuickResponse(self.person))
+        p = str(btn.custom_id).split(":")
+        await inter.response.send_modal(QuickResponse(person=p[1]))
 
 
 class AdView(nextcord.ui.View):
@@ -298,17 +302,17 @@ class QuestionForm(nextcord.ui.Modal):
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
 
-            save_request_data(inter.user.id, self.details.value)
-
             await target_channel.send(
-                embed=em, view=RequestView(person=inter, message=em)
+                embed=em, view=RequestView(person=inter.user.id, message=em)
             )
+            msg = target_channel.last_message_id
+            save_request_data(inter.user.id, self.details.value, msg)
             await inter.response.send_message(
                 """📫 **Your request has been sent!**""", ephemeral=True
             )
 
 
-def save_request_data(user_id: int, request_details: str) -> None:
+def save_request_data(user_id: int, request_details: str, msg_id: int) -> None:
     # Load existing data
     load_data()
 
@@ -316,7 +320,7 @@ def save_request_data(user_id: int, request_details: str) -> None:
     user_requests = requests_data.setdefault(str(user_id), {})
 
     # Add the request details to the user's requests
-    user_requests[f"request_{len(user_requests) + 1}"] = {
+    user_requests[str(msg_id)] = {
         "timestamp": f"{get_date()} {get_time()}",
         "details": request_details,
         "response": None,  # Initialize response as None
@@ -337,6 +341,7 @@ class Inquiry(Cog):
         if not self.persistent_modals_added:
             self.bot.add_modal(QuestionForm())
             self.bot.add_modal(AdForm())
+            self.bot.add_modal(QuickResponse())
             self.persistent_modals_added = True
 
         if not self.persistent_views_added:
