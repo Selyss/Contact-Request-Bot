@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
@@ -106,8 +106,6 @@ class QuickResponse(nextcord.ui.Modal):
 
     async def callback(self, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
-            # marlow = inter.guild.get_member(MARLOW_ID)
-
             category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
             new_channel = await category.create_text_channel(
                 name=f"ticket-{self.person.user.name}",
@@ -272,7 +270,7 @@ class QuestionForm(nextcord.ui.Modal):
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
             await target_channel.send(
-                embed=em, view=RequestView(person=inter, message=self.details.value)
+                embed=em, view=RequestView(person=inter, message=em)
             )
             await inter.response.send_message(
                 """📫 **Your request has been sent!**""", ephemeral=True
