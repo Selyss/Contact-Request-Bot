@@ -1,11 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 from nextcord.ext import commands
 import nextcord
-from typing import Dict
-
 
 CLOSED_CATEGORY = 1182473403303723128
 
@@ -22,32 +20,6 @@ EMBED_SUCCESS = 0x2ECC71
 AD_EMBED_COLOR = 0x2ECC71
 MARLOW_ID: int = 630872658027872273
 ADVERTISING_ROLE: int = 1096584186304942111
-
-JSON_FILE = "data.json"
-
-requests_data: Dict[str, Dict[str, str]] = {}
-
-
-# Function to load data from the JSON file
-def load_data() -> None:
-    global requests_data
-    try:
-        with open(JSON_FILE, "r", encoding="utf-8") as json_file:
-            requests_data = json.load(json_file)
-    except FileNotFoundError:
-        print("NO JSON FILE")
-        # File doesn't exist, initialize with an empty dictionary
-        requests_data = {}
-
-
-# Function to save data to the JSON file
-def save_data() -> None:
-    with open(JSON_FILE, "w", encoding="utf-8") as json_file:
-        json.dump(requests_data, json_file, ensure_ascii=False, indent=4)
-
-
-# Load data when the bot starts
-load_data()
 
 
 def get_date() -> str:
@@ -114,7 +86,7 @@ class CloseView(nextcord.ui.View):
 
 
 class QuickResponse(nextcord.ui.Modal):
-    def __init__(self, person=None) -> None:
+    def __init__(self, person=None):
         super().__init__(
             title="Quick Response",
             custom_id="ticket:quickresponse",
@@ -134,38 +106,33 @@ class QuickResponse(nextcord.ui.Modal):
 
     async def callback(self, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
-            # FIXME: SWITCH TO GET MEMBER (DOCS)
-            mem = await inter.guild.fetch_member(self.person)
-            name = mem.name
-            id = mem.id
             category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
             new_channel = await category.create_text_channel(
-                name=f"ticket-{name}",
-                reason=f"Created ticket for {id} - {name}",
-                topic=id,
+                name=f"ticket-{self.person.user.name}",
+                reason=f"Created ticket for {self.person.user.id} - {self.person.user.name}",
+                topic=self.person.user.id,
             )
             await inter.response.send_message(
                 f"Ticket created: <#{new_channel.id}>", ephemeral=True
             )
             em = nextcord.Embed()
             em.color = EMBED_COLOR
-            # em.set_author(icon_url=marlow.user.avatar, name=marlow.user.name)
             em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
             em.add_field(name="**message**", value=self.details.value, inline=False)
-            em.set_footer(text=f"{id} • {get_date()} • {get_time()}")
+            em.set_footer(text=f"{self.person.user.id} • {get_date()} • {get_time()}")
 
             await new_channel.send(
-                content=f"<@{id}>",
+                content=f"<@{self.person.user.id}>",
                 embed=em,
                 view=CloseView(),
             )
             await new_channel.set_permissions(
-                mem, send_messages=False, read_messages=True
+                self.person.user, send_messages=False, read_messages=True
             )
 
 
 class RequestView(nextcord.ui.View):
-    def __init__(self, person=None, message=None) -> None:
+    def __init__(self, person=None, message=None):
         super().__init__(timeout=None)
         self.person = person
         self.message = message
@@ -201,11 +168,11 @@ class RequestView(nextcord.ui.View):
     @nextcord.ui.button(
         label="Quick Response",
         style=nextcord.ButtonStyle.blurple,
-        custom_id="ticket:ID",  ### SUB ID??
+        custom_id="ticket:quickresponse",
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        p = str(btn.custom_id).split(":")
-        await inter.response.send_modal(QuickResponse(person=p[1]))
+        modal = QuickResponse(self.person)
+        await inter.response.send_modal(modal)
 
 
 class AdView(nextcord.ui.View):
@@ -301,33 +268,12 @@ class QuestionForm(nextcord.ui.Modal):
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
-
             await target_channel.send(
-                embed=em, view=RequestView(person=inter.user.id, message=em)
+                embed=em, view=RequestView(person=inter, message=self.details.value)
             )
-            msg = target_channel.last_message_id
-            save_request_data(inter.user.id, self.details.value, msg)
             await inter.response.send_message(
                 """📫 **Your request has been sent!**""", ephemeral=True
             )
-
-
-def save_request_data(user_id: int, request_details: str, msg_id: int) -> None:
-    # Load existing data
-    load_data()
-
-    # Get or create a dictionary for the user's requests
-    user_requests = requests_data.setdefault(str(user_id), {})
-
-    # Add the request details to the user's requests
-    user_requests[str(msg_id)] = {
-        "timestamp": f"{get_date()} {get_time()}",
-        "details": request_details,
-        "response": None,  # Initialize response as None
-    }
-
-    # Save the data to the JSON file
-    save_data()
 
 
 class Inquiry(Cog):
@@ -341,7 +287,6 @@ class Inquiry(Cog):
         if not self.persistent_modals_added:
             self.bot.add_modal(QuestionForm())
             self.bot.add_modal(AdForm())
-            self.bot.add_modal(QuickResponse())
             self.persistent_modals_added = True
 
         if not self.persistent_views_added:
