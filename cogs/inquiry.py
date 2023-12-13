@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
@@ -79,14 +79,13 @@ class CloseView(nextcord.ui.View):
     )
     async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         await inter.channel.send("Closing ticket...")
-        await inter.channel.edit(category=CLOSED_CATEGORY)
-        await inter.channel.set_permissions(
-            inter.author, read_messages=False, send_messages=False
-        )
+        category = inter.guild.get_channel(CLOSED_CATEGORY)
+        await inter.channel.edit(category=category)
+        # TODO: remove person from ticket
 
 
 class QuickResponse(nextcord.ui.Modal):
-    def __init__(self, person=None):
+    def __init__(self, person: int):
         super().__init__(
             title="Quick Response",
             custom_id="ticket:quickresponse",
@@ -106,11 +105,14 @@ class QuickResponse(nextcord.ui.Modal):
 
     async def callback(self, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
+            person = await inter.guild.fetch_member(self.person)
+            id = person.id
+            name = person.name
             category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
             new_channel = await category.create_text_channel(
-                name=f"ticket-{self.person.user.name}",
-                reason=f"Created ticket for {self.person.user.id} - {self.person.user.name}",
-                topic=self.person.user.id,
+                name=f"ticket-{name}",
+                reason=f"Created ticket for {id} - {name}",
+                topic=id,
             )
             await inter.response.send_message(
                 f"Ticket created: <#{new_channel.id}>", ephemeral=True
@@ -119,23 +121,21 @@ class QuickResponse(nextcord.ui.Modal):
             em.color = EMBED_COLOR
             em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
             em.add_field(name="**message**", value=self.details.value, inline=False)
-            em.set_footer(text=f"{self.person.user.id} • {get_date()} • {get_time()}")
+            em.set_footer(text=f"{id} • {get_date()} • {get_time()}")
 
             await new_channel.send(
-                content=f"<@{self.person.user.id}>",
+                content=f"<@{id}>",
                 embed=em,
                 view=CloseView(),
             )
             await new_channel.set_permissions(
-                self.person.user, send_messages=False, read_messages=True
+                person, send_messages=False, read_messages=True
             )
 
 
 class RequestView(nextcord.ui.View):
-    def __init__(self, person=None, message=None):
+    def __init__(self):
         super().__init__(timeout=None)
-        self.person = person
-        self.message = message
 
     @nextcord.ui.button(
         label="Accept", style=nextcord.ButtonStyle.green, custom_id="requestview:accept"
@@ -171,8 +171,8 @@ class RequestView(nextcord.ui.View):
         custom_id="ticket:quickresponse",
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        modal = QuickResponse(self.person)
-        await inter.response.send_modal(modal)
+        msg = inter.message.embeds[0].footer.text[:20]
+        await inter.response.send_modal(QuickResponse(msg))
 
 
 class AdView(nextcord.ui.View):
@@ -268,9 +268,7 @@ class QuestionForm(nextcord.ui.Modal):
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
-            await target_channel.send(
-                embed=em, view=RequestView(person=inter, message=self.details.value)
-            )
+            await target_channel.send(embed=em, view=RequestView())
             await inter.response.send_message(
                 """📫 **Your request has been sent!**""", ephemeral=True
             )
