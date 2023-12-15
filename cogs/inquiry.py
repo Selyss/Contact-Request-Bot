@@ -5,7 +5,7 @@ from nextcord.ext.commands import Bot, Cog
 from nextcord.ext import commands
 import nextcord
 
-CLOSED_CATEGORY = 1182473403303723128
+CLOSED_CATEGORY = 1185024776327151687
 
 with open("config.json", "r", encoding="utf-8") as config_file:
     config = json.load(config_file)
@@ -13,8 +13,8 @@ with open("config.json", "r", encoding="utf-8") as config_file:
     # PAID_CATEGORY: int = config["paid_category"]
 
 # TODO: add as config fields
-TICKET_CATEGORY: int = 1182104505270149221
-PAID_CATEGORY: int = 1181391079698878555
+TICKET_CATEGORY: int = 1185024748225302598
+PAID_CATEGORY: int = 1185024723457941555
 EMBED_COLOR = 0xFF88FF
 EMBED_SUCCESS = 0x2ECC71
 AD_EMBED_COLOR = 0x2ECC71
