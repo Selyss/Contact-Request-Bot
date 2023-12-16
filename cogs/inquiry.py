@@ -124,7 +124,7 @@ class QuickResponse(nextcord.ui.Modal):
             person = await inter.guild.fetch_member(self.person)
             id = person.id
             name = person.name
-            category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
+            category = nextcord.utils.get(inter.guild.categories, id=CLOSED_CATEGORY)
             new_channel = await category.create_text_channel(
                 name=f"ticket-{name}",
                 reason=f"Created ticket for {id} - {name}",
@@ -247,34 +247,16 @@ class AdForm(nextcord.ui.Modal):
 
     async def callback(self, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
-            category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
-            new_channel = await category.create_text_channel(
-                name=f"ticket-{inter.user.name}",
-                reason=f"Created ticket for {inter.user.id} - {inter.user.name}",
-                topic=inter.user.id,
-            )
-            await inter.response.send_message(
-                f"Ticket created: <#{new_channel.id}>", ephemeral=True
-            )
+            target_channel = inter.guild.get_channel(AD_CHANNEL)
             em = nextcord.Embed()
-            em.color = AD_EMBED_COLOR
+            em.title = "Advertisement"
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
-            em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
-            em.add_field(name="**reason**", value=self.details.value, inline=False)
+            em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
-            await new_channel.set_permissions(
-                inter.user, send_messages=True, read_messages=True
+            await target_channel.send(embed=em, view=RequestView())
+            await inter.response.send_message(
+                """📫 **Your request has been sent!**""", ephemeral=True
             )
-            await new_channel.send(
-                content=f"<@{inter.user.id}> <@{MARLOW_ID}> <@{ADVERTISING_ROLE}>",
-                embed=em,
-                view=AdView(),
-            )
-            emb = nextcord.Embed()
-            emb.color = 0xE67E22
-            emb.title = "__**Advertisement Services**__"
-            emb.description = """:bell: $40 = Ping @ everyone with ad message/links\n\n:gift: $45 = Hosted Nitro Giveaway Ad with @ everyone ping (Nitro must be supplied by the customer)\n\n*These prices apply to the Vanilla PvP Community/Tier List*"""
-            await new_channel.send(embed=emb)
 
 
 class QuestionForm(nextcord.ui.Modal):
@@ -299,6 +281,7 @@ class QuestionForm(nextcord.ui.Modal):
         if isinstance(inter.channel, nextcord.TextChannel):
             target_channel = inter.guild.get_channel(REQUEST_CHANNEL)
             em = nextcord.Embed()
+            em.title = "Contact Request"
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.add_field(name="**reason**", value=self.details.value)
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
