@@ -5,6 +5,18 @@ from nextcord.ext.commands import Bot, Cog
 from nextcord.ext import commands
 import nextcord
 
+
+# from os import getenv
+#
+# load_dotenv()
+#
+# CLOSED_CATEGORY = os.getenv("CLOSED_CATEGORY")
+# TICKET_CATEGORY = os.getenv("TICKET_CATEGORY")
+# PAID_CATEGORY = os.getenv("PAID_CATEGORY")
+# REQUEST_CHANNEL = os.getenv("REQUEST_CHANNEL")
+# MARLOW_ID = os.getenv("MARLOW_ID")
+# ADVERTISING_ROLE = os.getenv("ADVERTISING_ROLE")
+
 CLOSED_CATEGORY = 1185024776327151687
 
 with open("config.json", "r", encoding="utf-8") as config_file:
@@ -14,6 +26,7 @@ with open("config.json", "r", encoding="utf-8") as config_file:
 
 # TODO: add as config fields
 TICKET_CATEGORY: int = 1185024748225302598
+AD_CHANNEL: int = 1185052203996684359
 PAID_CATEGORY: int = 1185024723457941555
 EMBED_COLOR = 0xFF88FF
 EMBED_SUCCESS = 0x2ECC71
@@ -75,7 +88,9 @@ class CloseView(nextcord.ui.View):
         super().__init__(timeout=None)
 
     @nextcord.ui.button(
-        label="Close", style=nextcord.ButtonStyle.red, custom_id="closeview:close"
+        label="Acknowledge",
+        style=nextcord.ButtonStyle.blurple,
+        custom_id="closeview:close",
     )
     async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         await inter.channel.send("Closing ticket...")
@@ -118,10 +133,10 @@ class QuickResponse(nextcord.ui.Modal):
                 f"Ticket created: <#{new_channel.id}>", ephemeral=True
             )
             em = nextcord.Embed()
-            em.color = EMBED_COLOR
-            em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
-            em.add_field(name="**message**", value=self.details.value, inline=False)
-            em.set_footer(text=f"{id} • {get_date()} • {get_time()}")
+            em.color = 0x398A9E
+            em.set_author(name=f"{person.name} replied:", icon_url=person.avatar)
+            em.description = self.details.value
+            em.set_footer(text='Press "Acknowledge" to close.')
 
             await new_channel.send(
                 content=f"<@{id}>",
@@ -152,7 +167,7 @@ class RequestView(nextcord.ui.View):
         )
         em = nextcord.Embed()
         em.color = EMBED_COLOR
-        em.add_field(name="**CONTACT REQUEST ACCEPTED**", value="", inline=False)
+        em.set_author(name=f"{self.person.name} asked:", icon_url=self.person.avatar)
         em.add_field(name="**message**", value=self.message, inline=False)
         em.set_footer(text=f"{self.person.user.id} • {get_date()} • {get_time()}")
 
@@ -171,7 +186,7 @@ class RequestView(nextcord.ui.View):
         custom_id="ticket:quickresponse",
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        msg = inter.message.embeds[0].footer.text[:20]
+        msg = inter.message.embeds[0].footer.text.split("•")[0]
         await inter.response.send_modal(QuickResponse(msg))
 
 
