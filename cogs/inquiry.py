@@ -100,13 +100,14 @@ class CloseView(nextcord.ui.View):
 
 
 class QuickResponse(nextcord.ui.Modal):
-    def __init__(self, person: int):
+    def __init__(self, person: int, message: str) -> None:
         super().__init__(
             title="Quick Response",
             custom_id="ticket:quickresponse",
             timeout=None,
         )
         self.person = person
+        self.message = message
 
         self.details = nextcord.ui.TextInput(
             label="Response",
@@ -132,9 +133,22 @@ class QuickResponse(nextcord.ui.Modal):
             await inter.response.send_message(
                 f"Ticket created: <#{new_channel.id}>", ephemeral=True
             )
+            # inquiry again
+            emb = nextcord.Embed()
+            emb.color = 0xC33C3C
+            emb.set_author(name=f"{name} inquired:", icon_url=person.avatar)
+            emb.description = self.message
+            emb.set_footer(text=f"{id} • {get_date()} • {get_time()}")
+            await new_channel.send(
+                embed=emb,
+            )
+
+            # response msg
             em = nextcord.Embed()
             em.color = 0x398A9E
-            em.set_author(name=f"{person.name} replied:", icon_url=person.avatar)
+            em.set_author(
+                name=f"{inter.user.name} replied:", icon_url=inter.user.avatar
+            )
             em.description = self.details.value
             em.set_footer(text='Press "Acknowledge" to close.')
 
@@ -156,28 +170,32 @@ class RequestView(nextcord.ui.View):
         label="Accept", style=nextcord.ButtonStyle.green, custom_id="requestview:accept"
     )
     async def accept(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+        msg = inter.message.embeds[0].footer.text.split("•")[0]
+        content = inter.message.embeds[0].fields[0].value
+        person = await inter.guild.fetch_member(msg)
+        id = person.id
+        name = person.name
         category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
         new_channel = await category.create_text_channel(
-            name=f"ticket-{self.person.user.name}",
-            reason=f"Created ticket for {self.person.user.id} - {self.person.user.name}",
-            topic=self.person.user.id,
+            name=f"ticket-{name}",
+            reason=f"Created ticket for {id} - {name}",
+            topic=id,
         )
         await inter.response.send_message(
             f"Ticket created: <#{new_channel.id}>", ephemeral=True
         )
         em = nextcord.Embed()
-        em.color = EMBED_COLOR
-        em.set_author(name=f"{self.person.name} asked:", icon_url=self.person.avatar)
-        em.add_field(name="**message**", value=self.message, inline=False)
-        em.set_footer(text=f"{self.person.user.id} • {get_date()} • {get_time()}")
+        em.color = 0xC33C3C
+        em.set_author(name=f"{name} inquired:", icon_url=person.avatar)
+        em.description = content
+        em.set_footer(text=f"{id} • {get_date()} • {get_time()}")
 
         await new_channel.set_permissions(
-            self.person.user, send_messages=True, read_messages=True
+            person, send_messages=True, read_messages=True
         )
         await new_channel.send(
-            content=f"<@{self.person.user.id}>",
+            content=f"<@{id}>",
             embed=em,
-            view=CloseView(),
         )
 
     @nextcord.ui.button(
@@ -187,7 +205,8 @@ class RequestView(nextcord.ui.View):
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         msg = inter.message.embeds[0].footer.text.split("•")[0]
-        await inter.response.send_modal(QuickResponse(msg))
+        content = inter.message.embeds[0].fields[0].value
+        await inter.response.send_modal(QuickResponse(msg, content))
 
 
 class AdView(nextcord.ui.View):
