@@ -34,14 +34,15 @@ class TicketView(nextcord.ui.View):
         custom_id="ticket:inquiry",
     )
     async def open_inquiry(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        inter.message.author = inter.user
-        bucket = self.cooldown.get_bucket(inter.message)
-        retry = bucket.update_rate_limit()
-        if retry:
-            return await inter.response.send_message(
-                f"Slow down! Try again in {int(retry // 3600)}h.", ephemeral=True
-            )
-        await inter.response.send_modal(QuestionForm())
+        if isinstance(inter.message, nextcord.Message):
+            inter.message.author = inter.user
+            bucket = self.cooldown.get_bucket(inter.message)
+            retry = bucket.update_rate_limit()
+            if retry:
+                return await inter.response.send_message(
+                    f"Slow down! Try again in {int(retry // 3600)}h.", ephemeral=True
+                )
+            await inter.response.send_modal(QuestionForm())
 
     @nextcord.ui.button(
         label="📢 Advertisement",
