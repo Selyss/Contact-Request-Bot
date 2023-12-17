@@ -230,9 +230,7 @@ class AdForm(nextcord.ui.Modal):
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.description = self.details.value
             em.set_footer(text=format_footer(inter.user.id))
-            await target_channel.send(
-                content=f"<@{ADVERTISING_ROLE}>", embed=em, view=RequestView()
-            )
+            await target_channel.send(embed=em, view=RequestView())
             await inter.response.send_message(
                 """📫 **Your request has been sent!**""", ephemeral=True
             )
