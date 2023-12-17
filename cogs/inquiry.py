@@ -235,9 +235,7 @@ class AdForm(nextcord.ui.Modal):
 
     async def callback(self, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
-            print(AD_CHANNEL)
             target_channel = inter.guild.get_channel(AD_CHANNEL)
-            print(target_channel)
             em = nextcord.Embed()
             em.title = "Advertisement"
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
