@@ -17,6 +17,7 @@ def format_footer(id: int) -> str:
     return f"{id} • {get_date()} • {get_time()}"
 
 
-async def get_id_from_em(inter: nextcord.Interaction) -> str:
+async def get_id_from_em(inter: nextcord.Interaction):
     """takes in embed and returns the user id in footer"""
-    return inter.message.embeds[0].footer.text.split("•")[0]
+    if isinstance(inter.message, nextcord.Message):
+        return inter.message.embeds[0].footer.text.split("•")[0]

@@ -49,14 +49,15 @@ class TicketView(nextcord.ui.View):
         custom_id="ticket:advertisement",
     )
     async def advertisement(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        inter.message.author = inter.user
-        bucket = self.cooldown.get_bucket(inter.message)
-        retry = bucket.update_rate_limit()
-        if retry:
-            return await inter.response.send_message(
-                f"Slow down! Try again in {int(retry // 3600)}h.", ephemeral=True
-            )
-        await inter.response.send_modal(AdForm())
+        if isinstance(inter.message, nextcord.Message):
+            inter.message.author = inter.user
+            bucket = self.cooldown.get_bucket(inter.message)
+            retry = bucket.update_rate_limit()
+            if retry:
+                return await inter.response.send_message(
+                    f"Slow down! Try again in {int(retry // 3600)}h.", ephemeral=True
+                )
+            await inter.response.send_modal(AdForm())
 
 
 class QuickResponse(nextcord.ui.Modal):
