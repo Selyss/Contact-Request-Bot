@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 from dotenv.main import load_dotenv
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
@@ -19,7 +18,6 @@ ADVERTISING_ROLE = int(getenv("ADVERTISING_ROLE"))
 AD_CHANNEL = int(getenv("AD_CHANNEL"))
 
 
-# TODO: add as config fields
 EMBED_COLOR = 0xFF88FF
 EMBED_SUCCESS = 0x2ECC71
 AD_EMBED_COLOR = 0x2ECC71
