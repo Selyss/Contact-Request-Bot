@@ -7,6 +7,7 @@ from os import getenv
 from .utils.colors import EMBED_COLOR, SUCCESS, INQUIRY, REPLY, AD_EM_COLOR
 from .utils.formatting import format_footer
 from views.ad import AdView
+from views.close import CloseView
 
 load_dotenv()
 
@@ -56,23 +57,6 @@ class TicketView(nextcord.ui.View):
                 f"Slow down! Try again in {int(retry // 3600)}h.", ephemeral=True
             )
         await inter.response.send_modal(AdForm())
-
-
-class CloseView(nextcord.ui.View):
-    def __init__(self) -> None:
-        super().__init__(timeout=None)
-
-    @nextcord.ui.button(
-        label="Acknowledge",
-        style=nextcord.ButtonStyle.blurple,
-        custom_id="closeview:close",
-    )
-    async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        if isinstance(inter.channel, nextcord.TextChannel):
-            await inter.channel.send("Closing ticket...")
-            category = inter.guild.get_channel(CLOSED_CATEGORY)
-            await inter.channel.edit(category=category)
-            # TODO: remove person from ticket
 
 
 class QuickResponse(nextcord.ui.Modal):
@@ -131,7 +115,7 @@ class QuickResponse(nextcord.ui.Modal):
             await new_channel.send(
                 content=f"<@{id}>",
                 embed=em,
-                view=CloseView(),
+                view=CloseView(CLOSED_CATEGORY),
             )
             await new_channel.set_permissions(
                 person, send_messages=False, read_messages=True
