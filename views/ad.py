@@ -11,7 +11,7 @@ class AdView(nextcord.ui.View):
     @nextcord.ui.button(
         label="Mark Paid", style=nextcord.ButtonStyle.green, custom_id="ticket:paid"
     )
-    async def paid(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+    async def paid(self, btn: nextcord.ui.Button, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
             category = nextcord.utils.get(inter.guild.categories, id=self.paid_category)
             await inter.channel.edit(category=category)

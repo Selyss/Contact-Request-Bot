@@ -11,7 +11,7 @@ class CloseView(nextcord.ui.View):
         style=nextcord.ButtonStyle.blurple,
         custom_id="closeview:close",
     )
-    async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
+    async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
             await inter.channel.send("Closing ticket...")
             category = inter.guild.get_channel(self.closed_category)
