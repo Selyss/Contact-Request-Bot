@@ -4,7 +4,7 @@ from nextcord.ext.commands import Bot, Cog
 from nextcord.ext import commands
 import nextcord
 from os import getenv
-from .utils.colors import EMBED_COLOR, SUCCESS, INQUIRY, REPLY
+from .utils.colors import EMBED_COLOR, SUCCESS, INQUIRY, REPLY, AD_EM_COLOR
 from .utils.formatting import format_footer
 
 load_dotenv()
@@ -161,18 +161,42 @@ class RequestView(nextcord.ui.View):
             f"Ticket created: <#{new_channel.id}>", ephemeral=True
         )
         em = nextcord.Embed()
-        em.color = INQUIRY
-        em.set_author(name=f"{name} inquired:", icon_url=person.avatar)
-        em.description = content
-        em.set_footer(text=format_footer(id))
+        if inter.channel.id == AD_CHANNEL:
+            # IS AD
+            em.color = SUCCESS
+            em.set_author(
+                name=f"{name} requested an advertisement:", icon_url=person.avatar
+            )
+            em.description = content
+            em.set_footer(text=format_footer(id))
 
-        await new_channel.set_permissions(
-            person, send_messages=True, read_messages=True
-        )
-        await new_channel.send(
-            content=f"<@{id}>",
-            embed=em,
-        )
+            await new_channel.set_permissions(
+                person, send_messages=True, read_messages=True
+            )
+            await new_channel.send(
+                content=f"<@{inter.user.id}> <@{ADVERTISING_ROLE}>",
+                embed=em,
+                view=AdView(),
+            )
+            emb = nextcord.Embed()
+            emb.color = 0xE67E22
+            emb.title = "__**Advertisement Services**__"
+            emb.description = """:bell: $40 = Ping @ everyone with ad message/links\n\n:gift: $45 = Hosted Nitro Giveaway Ad with @ everyone ping (Nitro must be supplied by the customer)\n\n*These prices apply to the Vanilla PvP Community/Tier List*"""
+            await new_channel.send(embed=emb)
+
+        else:
+            em.color = INQUIRY
+            em.set_author(name=f"{name} inquired:", icon_url=person.avatar)
+            em.description = content
+            em.set_footer(text=format_footer(id))
+
+            await new_channel.set_permissions(
+                person, send_messages=True, read_messages=True
+            )
+            await new_channel.send(
+                content=f"<@{id}>",
+                embed=em,
+            )
 
     @nextcord.ui.button(
         label="Quick Response",
