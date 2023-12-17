@@ -1,4 +1,3 @@
-from datetime import datetime
 from dotenv.main import load_dotenv
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
@@ -6,6 +5,7 @@ from nextcord.ext import commands
 import nextcord
 from os import getenv
 from .utils.colors import EMBED_COLOR, SUCCESS, INQUIRY, REPLY
+from .utils.formatting import get_date, get_time, format_footer
 
 load_dotenv()
 
@@ -16,14 +16,6 @@ PAID_CATEGORY = int(getenv("PAID_CATEGORY"))
 REQUEST_CHANNEL = int(getenv("REQUEST_CHANNEL"))
 ADVERTISING_ROLE = int(getenv("ADVERTISING_ROLE"))
 AD_CHANNEL = int(getenv("AD_CHANNEL"))
-
-
-def get_date() -> str:
-    return datetime.now().strftime("%m/%d/%Y")
-
-
-def get_time() -> str:
-    return datetime.now().strftime("%-I:%M %p")
 
 
 class TicketView(nextcord.ui.View):
@@ -121,7 +113,7 @@ class QuickResponse(nextcord.ui.Modal):
             emb.color = INQUIRY
             emb.set_author(name=f"{name} inquired:", icon_url=person.avatar)
             emb.description = self.message
-            emb.set_footer(text=f"{id} • {get_date()} • {get_time()}")
+            emb.set_footer(text=format_footer(id))
             await new_channel.send(
                 embed=emb,
             )
@@ -171,7 +163,7 @@ class RequestView(nextcord.ui.View):
         em.color = INQUIRY
         em.set_author(name=f"{name} inquired:", icon_url=person.avatar)
         em.description = content
-        em.set_footer(text=f"{id} • {get_date()} • {get_time()}")
+        em.set_footer(text=format_footer(id))
 
         await new_channel.set_permissions(
             person, send_messages=True, read_messages=True
@@ -206,7 +198,7 @@ class AdView(nextcord.ui.View):
         em.color = SUCCESS
         em.title = ":checkmark: Payment Received"
         em.description = """Thank you for your purchase!\nIf you haven't already, please send your advertisement message and ensure if you are using any custom/nitro-accessed Emojis that they are present within the Discord you are advertising (emojis from our server are fine, too).\n\nIf another advertisement was recently posted, out of courtesy it will be given a reasonable amount of uptime before yours is posted."""
-        em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
+        em.set_footer(text=format_footer(inter.user.id))
         await inter.response.send_message(embed=em)
 
 
@@ -235,8 +227,10 @@ class AdForm(nextcord.ui.Modal):
             em.title = "Advertisement"
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.description = self.details.value
-            em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
-            await target_channel.send(embed=em, view=RequestView())
+            em.set_footer(text=format_footer(inter.user.id))
+            await target_channel.send(
+                content=f"<@{ADVERTISING_ROLE}>", embed=em, view=RequestView()
+            )
             await inter.response.send_message(
                 """📫 **Your request has been sent!**""", ephemeral=True
             )
@@ -267,7 +261,7 @@ class QuestionForm(nextcord.ui.Modal):
             em.title = "Contact Request"
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             em.description = self.details.value
-            em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
+            em.set_footer(text=format_footer(inter.user.id))
             await target_channel.send(embed=em, view=RequestView())
             await inter.response.send_message(
                 """📫 **Your request has been sent!**""", ephemeral=True
