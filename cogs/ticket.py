@@ -1,7 +1,8 @@
 from os import getenv
-from nextcord import SlashOption, TextChannel, slash_command
+from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 import nextcord
+from .utils.colors import CLOSE_REQUEST
 
 CLOSED_CATEGORY = int(getenv("CLOSED_CATEGORY"))
 
@@ -62,7 +63,7 @@ class Ticket(Cog):
             return
 
         em = nextcord.Embed()
-        em.color = 0x3498DB
+        em.color = CLOSE_REQUEST
         em.title = "Ticket Close Request"
         em.description = f"<@{inter.user.id}> has requested to close this ticket.\n\nPlease accept or deny this request using the buttons below."
 

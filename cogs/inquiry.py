@@ -5,6 +5,7 @@ from nextcord.ext.commands import Bot, Cog
 from nextcord.ext import commands
 import nextcord
 from os import getenv
+from .utils.colors import EMBED_COLOR, SUCCESS, INQUIRY, REPLY
 
 load_dotenv()
 
@@ -16,11 +17,6 @@ REQUEST_CHANNEL = int(getenv("REQUEST_CHANNEL"))
 MARLOW_ID = int(getenv("MARLOW_ID"))
 ADVERTISING_ROLE = int(getenv("ADVERTISING_ROLE"))
 AD_CHANNEL = int(getenv("AD_CHANNEL"))
-
-
-EMBED_COLOR = 0xFF88FF
-EMBED_SUCCESS = 0x2ECC71
-AD_EMBED_COLOR = 0x2ECC71
 
 
 def get_date() -> str:
@@ -123,7 +119,7 @@ class QuickResponse(nextcord.ui.Modal):
             )
             # inquiry again
             emb = nextcord.Embed()
-            emb.color = 0xC33C3C
+            emb.color = INQUIRY
             emb.set_author(name=f"{name} inquired:", icon_url=person.avatar)
             emb.description = self.message
             emb.set_footer(text=f"{id} • {get_date()} • {get_time()}")
@@ -133,7 +129,7 @@ class QuickResponse(nextcord.ui.Modal):
 
             # response msg
             em = nextcord.Embed()
-            em.color = 0x398A9E
+            em.color = REPLY
             em.set_author(
                 name=f"{inter.user.name} replied:", icon_url=inter.user.avatar
             )
@@ -173,7 +169,7 @@ class RequestView(nextcord.ui.View):
             f"Ticket created: <#{new_channel.id}>", ephemeral=True
         )
         em = nextcord.Embed()
-        em.color = 0xC33C3C
+        em.color = INQUIRY
         em.set_author(name=f"{name} inquired:", icon_url=person.avatar)
         em.description = content
         em.set_footer(text=f"{id} • {get_date()} • {get_time()}")
@@ -208,7 +204,7 @@ class AdView(nextcord.ui.View):
         category = nextcord.utils.get(inter.guild.categories, id=PAID_CATEGORY)
         await inter.channel.edit(category=category)
         em = nextcord.Embed()
-        em.color = EMBED_SUCCESS
+        em.color = SUCCESS
         em.title = ":checkmark: Payment Received"
         em.description = """Thank you for your purchase!\nIf you haven't already, please send your advertisement message and ensure if you are using any custom/nitro-accessed Emojis that they are present within the Discord you are advertising (emojis from our server are fine, too).\n\nIf another advertisement was recently posted, out of courtesy it will be given a reasonable amount of uptime before yours is posted."""
         em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
