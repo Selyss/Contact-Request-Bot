@@ -1,38 +1,28 @@
 from datetime import datetime
 import json
+from dotenv.main import load_dotenv
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 from nextcord.ext import commands
 import nextcord
+from os import getenv
+
+load_dotenv()
 
 
-# from os import getenv
-#
-# load_dotenv()
-#
-# CLOSED_CATEGORY = os.getenv("CLOSED_CATEGORY")
-# TICKET_CATEGORY = os.getenv("TICKET_CATEGORY")
-# PAID_CATEGORY = os.getenv("PAID_CATEGORY")
-# REQUEST_CHANNEL = os.getenv("REQUEST_CHANNEL")
-# MARLOW_ID = os.getenv("MARLOW_ID")
-# ADVERTISING_ROLE = os.getenv("ADVERTISING_ROLE")
+CLOSED_CATEGORY = int(getenv("CLOSED_CATEGORY"))
+TICKET_CATEGORY = int(getenv("TICKET_CATEGORY"))
+PAID_CATEGORY = int(getenv("PAID_CATEGORY"))
+REQUEST_CHANNEL = int(getenv("REQUEST_CHANNEL"))
+MARLOW_ID = int(getenv("MARLOW_ID"))
+ADVERTISING_ROLE = int(getenv("ADVERTISING_ROLE"))
+AD_CHANNEL = int(getenv("AD_CHANNEL"))
 
-CLOSED_CATEGORY = 1185024776327151687
-
-with open("config.json", "r", encoding="utf-8") as config_file:
-    config = json.load(config_file)
-    REQUEST_CHANNEL: int = config["request_channel"]
-    # PAID_CATEGORY: int = config["paid_category"]
 
 # TODO: add as config fields
-TICKET_CATEGORY: int = 1185024748225302598
-AD_CHANNEL: int = 1185052203996684359
-PAID_CATEGORY: int = 1185024723457941555
 EMBED_COLOR = 0xFF88FF
 EMBED_SUCCESS = 0x2ECC71
 AD_EMBED_COLOR = 0x2ECC71
-MARLOW_ID: int = 630872658027872273
-ADVERTISING_ROLE: int = 1096584186304942111
 
 
 def get_date() -> str:
@@ -171,7 +161,7 @@ class RequestView(nextcord.ui.View):
     )
     async def accept(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         msg = inter.message.embeds[0].footer.text.split("•")[0]
-        content = inter.message.embeds[0].fields[0].value
+        content = inter.message.embeds[0].description
         person = await inter.guild.fetch_member(msg)
         id = person.id
         name = person.name
@@ -205,7 +195,7 @@ class RequestView(nextcord.ui.View):
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         msg = inter.message.embeds[0].footer.text.split("•")[0]
-        content = inter.message.embeds[0].fields[0].value
+        content = inter.message.embeds[0].description
         await inter.response.send_modal(QuickResponse(msg, content))
 
 
@@ -247,7 +237,9 @@ class AdForm(nextcord.ui.Modal):
 
     async def callback(self, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
+            print(AD_CHANNEL)
             target_channel = inter.guild.get_channel(AD_CHANNEL)
+            print(target_channel)
             em = nextcord.Embed()
             em.title = "Advertisement"
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
