@@ -179,12 +179,13 @@ class RequestView(nextcord.ui.View):
                 view=AdView(),
             )
             emb = nextcord.Embed()
-            emb.color = 0xE67E22
+            emb.color = AD_EM_COLOR
             emb.title = "__**Advertisement Services**__"
             emb.description = """:bell: $40 = Ping @ everyone with ad message/links\n\n:gift: $45 = Hosted Nitro Giveaway Ad with @ everyone ping (Nitro must be supplied by the customer)\n\n*These prices apply to the Vanilla PvP Community/Tier List*"""
             await new_channel.send(embed=emb)
 
         else:
+            # IS NOT AD
             em.color = INQUIRY
             em.set_author(name=f"{name} inquired:", icon_url=person.avatar)
             em.description = content
