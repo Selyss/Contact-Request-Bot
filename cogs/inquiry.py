@@ -251,7 +251,7 @@ class AdForm(nextcord.ui.Modal):
             em = nextcord.Embed()
             em.title = "Advertisement"
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
-            em.add_field(name="**reason**", value=self.details.value)
+            em.description = self.details.value
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
             await target_channel.send(embed=em, view=RequestView())
             await inter.response.send_message(
@@ -283,7 +283,7 @@ class QuestionForm(nextcord.ui.Modal):
             em = nextcord.Embed()
             em.title = "Contact Request"
             em.set_author(icon_url=inter.user.avatar, name=inter.user.name)
-            em.add_field(name="**reason**", value=self.details.value)
+            em.description = self.details.value
             em.set_footer(text=f"{inter.user.id} • {get_date()} • {get_time()}")
             await target_channel.send(embed=em, view=RequestView())
             await inter.response.send_message(
