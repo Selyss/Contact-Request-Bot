@@ -1,6 +1,5 @@
 import nextcord
 from cogs.utils.colors import SUCCESS
-from cogs.utils.formatting import format_footer
 
 
 class AdView(nextcord.ui.View):
@@ -19,5 +18,4 @@ class AdView(nextcord.ui.View):
             em.color = SUCCESS
             em.title = ":checkmark: Payment Received"
             em.description = """Thank you for your purchase!\nIf you haven't already, please send your advertisement message and ensure if you are using any custom/nitro-accessed Emojis that they are present within the Discord you are advertising (emojis from our server are fine, too).\n\nIf another advertisement was recently posted, out of courtesy it will be given a reasonable amount of uptime before yours is posted."""
-            em.set_footer(text=format_footer(inter.user.id))
             await inter.response.send_message(embed=em)

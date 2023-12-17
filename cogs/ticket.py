@@ -14,20 +14,23 @@ class CloseRequest(nextcord.ui.View):
 
     @nextcord.ui.button(label="☑️ Accept & Close", style=nextcord.ButtonStyle.green)
     async def accept(self, button: nextcord.ui.Button, inter: nextcord.Interaction):
-        await self.inter.channel.send("Closing ticket...")
-        await self.inter.channel.edit(category=CLOSED_CATEGORY)
-        await self.inter.channel.set_permissions(
-            self.inter.author, read_messages=False, send_messages=False
-        )
-        await self.inter.channel.send("Ticket closed!")
+        if isinstance(inter.channel, nextcord.TextChannel):
+            category = nextcord.utils.get(inter.guild.categories, id=CLOSED_CATEGORY)
+            await self.inter.channel.send("Closing ticket...")
+            await self.inter.channel.edit(category=category)
+            await self.inter.channel.set_permissions(
+                self.inter.user, send_messages=False, read_messages=False
+            )
+            await self.inter.channel.send("Ticket closed!")
 
     @nextcord.ui.button(label="❌ Deny & Keep Open", style=nextcord.ButtonStyle.gray)
     async def deny(self, button: nextcord.ui.Button, inter: nextcord.Interaction):
-        await inter.channel.send("Request denied!")
+        if isinstance(inter.channel, nextcord.TextChannel):
+            await inter.channel.send("Request denied!")
 
 
 class CloseView(nextcord.ui.View):
-    def __init__(self, inter: nextcord.Interaction):
+    def __init__(self, inter=None):
         super().__init__(timeout=60)
         self.inter = inter
 
@@ -39,11 +42,23 @@ class CloseView(nextcord.ui.View):
         await self.inter.channel.set_permissions(
             self.inter.user, read_messages=False, send_messages=False
         )
+        # FIXME: duplicate?
 
 
 class Ticket(Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+        self.persistent_modals_added = False
+        self.persistent_views_added = False
+
+    @Cog.listener()
+    async def on_ready(self) -> None:
+        if not self.persistent_modals_added:
+            self.persistent_modals_added = True
+
+        if not self.persistent_views_added:
+            self.bot.add_view(CloseView())
+            self.persistent_views_added = True
 
     @slash_command(name="close", description="close a ticket")
     async def close_ticket(self, inter: nextcord.Interaction):

@@ -14,6 +14,9 @@ class CloseView(nextcord.ui.View):
     async def close(self, btn: nextcord.ui.Button, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
             await inter.channel.send("Closing ticket...")
-            category = inter.guild.get_channel(self.closed_category)
-            await inter.channel.edit(category=category)
-            # TODO: remove person from ticket
+            if inter.channel.category.id == self.closed_category:
+                await inter.channel.delete()
+            else:
+                category = inter.guild.get_channel(self.closed_category)
+                await inter.channel.edit(category=category)
+                # TODO: remove person from ticket

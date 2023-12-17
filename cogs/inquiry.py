@@ -11,6 +11,7 @@ from views.close import CloseView
 
 load_dotenv()
 
+AD_CATEGORY = int(getenv("AD_CATEGORY"))
 PAID_CATEGORY = int(getenv("PAID_CATEGORY"))
 CLOSED_CATEGORY = int(getenv("CLOSED_CATEGORY"))
 TICKET_CATEGORY = int(getenv("TICKET_CATEGORY"))
@@ -109,7 +110,7 @@ class QuickResponse(nextcord.ui.Modal):
             em = nextcord.Embed()
             em.color = REPLY
             em.set_author(
-                name=f"{inter.user.name} replied:", icon_url=inter.user.avatar
+                name=f"{inter.user.nick} replied:", icon_url=inter.user.avatar
             )
             em.description = self.details.value
             em.set_footer(text='Press "Acknowledge" to close.')
@@ -137,7 +138,7 @@ class RequestView(nextcord.ui.View):
         person = await inter.guild.fetch_member(msg)
         id = person.id
         name = person.name
-        category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
+        category = nextcord.utils.get(inter.guild.categories, id=AD_CATEGORY)
         new_channel = await category.create_text_channel(
             name=f"ticket-{name}",
             reason=f"Created ticket for {id} - {name}",
