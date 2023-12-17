@@ -6,6 +6,7 @@ import nextcord
 from os import getenv
 from .utils.colors import EMBED_COLOR, SUCCESS, INQUIRY, REPLY
 from .utils.formatting import get_date, get_time, format_footer
+from .utils.helpers import create_ticket
 
 load_dotenv()
 
@@ -99,15 +100,8 @@ class QuickResponse(nextcord.ui.Modal):
             person = await inter.guild.fetch_member(self.person)
             id = person.id
             name = person.name
-            category = nextcord.utils.get(inter.guild.categories, id=CLOSED_CATEGORY)
-            new_channel = await category.create_text_channel(
-                name=f"ticket-{name}",
-                reason=f"Created ticket for {id} - {name}",
-                topic=id,
-            )
-            await inter.response.send_message(
-                f"Ticket created: <#{new_channel.id}>", ephemeral=True
-            )
+            new_channel = await create_ticket(inter, person, CLOSED_CATEGORY)
+
             # inquiry again
             emb = nextcord.Embed()
             emb.color = INQUIRY
