@@ -6,13 +6,13 @@ import nextcord
 from os import getenv
 from .utils.colors import EMBED_COLOR, SUCCESS, INQUIRY, REPLY, AD_EM_COLOR
 from .utils.formatting import format_footer
+from views.ad import AdView
 
 load_dotenv()
 
-
+PAID_CATEGORY = int(getenv("PAID_CATEGORY"))
 CLOSED_CATEGORY = int(getenv("CLOSED_CATEGORY"))
 TICKET_CATEGORY = int(getenv("TICKET_CATEGORY"))
-PAID_CATEGORY = int(getenv("PAID_CATEGORY"))
 REQUEST_CHANNEL = int(getenv("REQUEST_CHANNEL"))
 ADVERTISING_ROLE = int(getenv("ADVERTISING_ROLE"))
 AD_CHANNEL = int(getenv("AD_CHANNEL"))
@@ -176,7 +176,7 @@ class RequestView(nextcord.ui.View):
             await new_channel.send(
                 content=f"<@{inter.user.id}> <@{ADVERTISING_ROLE}>",
                 embed=em,
-                view=AdView(),
+                view=AdView(PAID_CATEGORY),
             )
             emb = nextcord.Embed()
             emb.color = AD_EM_COLOR
@@ -208,25 +208,6 @@ class RequestView(nextcord.ui.View):
         msg = inter.message.embeds[0].footer.text.split("•")[0]
         content = inter.message.embeds[0].description
         await inter.response.send_modal(QuickResponse(msg, content))
-
-
-class AdView(nextcord.ui.View):
-    def __init__(self) -> None:
-        super().__init__(timeout=None)
-
-    @nextcord.ui.button(
-        label="Mark Paid", style=nextcord.ButtonStyle.green, custom_id="ticket:paid"
-    )
-    async def paid(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        if isinstance(inter.channel, nextcord.TextChannel):
-            category = nextcord.utils.get(inter.guild.categories, id=PAID_CATEGORY)
-            await inter.channel.edit(category=category)
-            em = nextcord.Embed()
-            em.color = SUCCESS
-            em.title = ":checkmark: Payment Received"
-            em.description = """Thank you for your purchase!\nIf you haven't already, please send your advertisement message and ensure if you are using any custom/nitro-accessed Emojis that they are present within the Discord you are advertising (emojis from our server are fine, too).\n\nIf another advertisement was recently posted, out of courtesy it will be given a reasonable amount of uptime before yours is posted."""
-            em.set_footer(text=format_footer(inter.user.id))
-            await inter.response.send_message(embed=em)
 
 
 class AdForm(nextcord.ui.Modal):
