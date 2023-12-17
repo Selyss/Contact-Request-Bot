@@ -5,7 +5,7 @@ from nextcord.ext import commands
 import nextcord
 from os import getenv
 from .utils.colors import EMBED_COLOR, SUCCESS, INQUIRY, REPLY, AD_EM_COLOR
-from .utils.formatting import format_footer
+from .utils.formatting import format_footer, get_id_from_em
 from views.ad import AdView
 from views.close import CloseView
 
@@ -130,7 +130,7 @@ class RequestView(nextcord.ui.View):
         label="Accept", style=nextcord.ButtonStyle.green, custom_id="requestview:accept"
     )
     async def accept(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        msg = inter.message.embeds[0].footer.text.split("•")[0]
+        msg = await get_id_from_em(inter)
         content = inter.message.embeds[0].description
         person = await inter.guild.fetch_member(msg)
         id = person.id
@@ -189,7 +189,7 @@ class RequestView(nextcord.ui.View):
         custom_id="ticket:quickresponse",
     )
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
-        msg = inter.message.embeds[0].footer.text.split("•")[0]
+        msg = await get_id_from_em(inter)
         content = inter.message.embeds[0].description
         await inter.response.send_modal(QuickResponse(msg, content))
 
