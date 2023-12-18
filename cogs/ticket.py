@@ -8,24 +8,25 @@ CLOSED_CATEGORY = int(getenv("CLOSED_CATEGORY"))
 
 
 class CloseRequest(nextcord.ui.View):
-    def __init__(self, inter: nextcord.Interaction):
+    def __init__(self, inter: nextcord.Interaction, old_channel: nextcord.TextChannel):
         super().__init__(timeout=60)
         self.inter = inter
+        self.old_channel = old_channel
 
     @nextcord.ui.button(label="☑️ Accept & Close", style=nextcord.ButtonStyle.green)
     async def accept(self, button: nextcord.ui.Button, inter: nextcord.Interaction):
         if isinstance(inter.channel, nextcord.TextChannel):
             category = nextcord.utils.get(inter.guild.categories, id=CLOSED_CATEGORY)
             await self.inter.channel.send("Closing ticket...")
-            await self.inter.channel.edit(category=category)
-            await self.inter.channel.set_permissions(
-                self.inter.user, send_messages=False, read_messages=False
-            )
-            await self.inter.channel.send("Ticket closed!")
+            await self.inter.channel.delete()
 
     @nextcord.ui.button(label="❌ Deny & Keep Open", style=nextcord.ButtonStyle.gray)
     async def deny(self, button: nextcord.ui.Button, inter: nextcord.Interaction):
         if isinstance(inter.channel, nextcord.TextChannel):
+            category = nextcord.utils.get(
+                inter.guild.categories, id=self.old_channel.category_id
+            )
+            await self.inter.channel.edit(category=category)
             await inter.channel.send("Request denied!")
 
 
@@ -73,16 +74,16 @@ class Ticket(Cog):
 
     @slash_command(name="closereq", description="request to close ticket")
     async def close_request(self, inter: nextcord.Interaction):
-        if inter.channel.category_id == CLOSED_CATEGORY:
-            await inter.send("This channel is already closed!", ephemeral=True)
-            return
-
         em = nextcord.Embed()
         em.color = CLOSE_REQUEST
         em.title = "Ticket Close Request"
         em.description = f"<@{inter.user.id}> has requested to close this ticket.\n\nPlease accept or deny this request using the buttons below."
 
-        await inter.channel.send(embed=em, view=CloseRequest(inter=inter))
+        category = nextcord.utils.get(inter.guild.categories, id=CLOSED_CATEGORY)
+        await inter.channel.edit(category=category)
+        await inter.channel.send(
+            embed=em, view=CloseRequest(inter=inter, old_channel=inter.channel)
+        )
 
 
 def setup(bot: Bot) -> None:
