@@ -96,7 +96,7 @@ class QuickResponse(nextcord.ui.Modal):
             ac.set_author(icon_url=inter.user.avatar, name=inter.user.name)
             ac.description = self.message
             ac.set_footer(text=format_footer(inter.user.id))
-            await inter.message.edit(embed=ac)
+            await inter.message.edit(embed=ac, view=None)
             new_channel = await category.create_text_channel(
                 name=f"ticket-{name}",
                 reason=f"Created ticket for {id} - {name}",
@@ -149,10 +149,10 @@ class RequestView(nextcord.ui.View):
         ac = nextcord.Embed()
         ac.title = "Accepted"
         ac.color = SUCCESS
-        ac.set_author(icon_url=inter.user.avatar, name=inter.user.name)
+        ac.set_author(icon_url=person.avatar, name=person.name)
         ac.description = content
         ac.set_footer(text=format_footer(inter.user.id))
-        await inter.message.edit(embed=ac)
+        await inter.message.edit(embed=ac, view=None)
         em = nextcord.Embed()
         if inter.channel.id == AD_CHANNEL:
             # IS AD
