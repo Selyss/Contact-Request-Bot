@@ -87,6 +87,7 @@ class QuickResponse(nextcord.ui.Modal):
             person = await inter.guild.fetch_member(self.person)
             id = person.id
             name = person.name
+            nick = person.nick
             category = nextcord.utils.get(inter.guild.categories, id=CLOSED_CATEGORY)
             new_channel = await category.create_text_channel(
                 name=f"ticket-{name}",
@@ -99,7 +100,7 @@ class QuickResponse(nextcord.ui.Modal):
             # inquiry again
             emb = nextcord.Embed()
             emb.color = INQUIRY
-            emb.set_author(name=f"{name} inquired:", icon_url=person.avatar)
+            emb.set_author(name=f"{nick} inquired:", icon_url=person.avatar)
             emb.description = self.message
             emb.set_footer(text=format_footer(id))
             await new_channel.send(
@@ -138,21 +139,23 @@ class RequestView(nextcord.ui.View):
         person = await inter.guild.fetch_member(msg)
         id = person.id
         name = person.name
-        category = nextcord.utils.get(inter.guild.categories, id=AD_CATEGORY)
-        new_channel = await category.create_text_channel(
-            name=f"ticket-{name}",
-            reason=f"Created ticket for {id} - {name}",
-            topic=id,
-        )
-        await inter.response.send_message(
-            f"Ticket created: <#{new_channel.id}>", ephemeral=True
-        )
+        nick = person.nick
+        await inter.message.delete()
         em = nextcord.Embed()
         if inter.channel.id == AD_CHANNEL:
             # IS AD
+            category = nextcord.utils.get(inter.guild.categories, id=AD_CATEGORY)
+            new_channel = await category.create_text_channel(
+                name=f"ticket-{name}",
+                reason=f"Created ticket for {id} - {name}",
+                topic=id,
+            )
+            await inter.response.send_message(
+                f"Ticket created: <#{new_channel.id}>", ephemeral=True
+            )
             em.color = SUCCESS
             em.set_author(
-                name=f"{name} requested an advertisement:", icon_url=person.avatar
+                name=f"{nick} requested an advertisement:", icon_url=person.avatar
             )
             em.description = content
             em.set_footer(text=format_footer(id))
@@ -173,8 +176,17 @@ class RequestView(nextcord.ui.View):
 
         else:
             # IS NOT AD
+            category = nextcord.utils.get(inter.guild.categories, id=TICKET_CATEGORY)
+            new_channel = await category.create_text_channel(
+                name=f"ticket-{name}",
+                reason=f"Created ticket for {id} - {name}",
+                topic=id,
+            )
+            await inter.response.send_message(
+                f"Ticket created: <#{new_channel.id}>", ephemeral=True
+            )
             em.color = INQUIRY
-            em.set_author(name=f"{name} inquired:", icon_url=person.avatar)
+            em.set_author(name=f"{nick} inquired:", icon_url=person.avatar)
             em.description = content
             em.set_footer(text=format_footer(id))
 

@@ -8,7 +8,7 @@ CLOSED_CATEGORY = int(getenv("CLOSED_CATEGORY"))
 
 
 class CloseRequest(nextcord.ui.View):
-    def __init__(self, inter: nextcord.Interaction, old_channel: nextcord.TextChannel):
+    def __init__(self, inter=None, old_channel=None):
         super().__init__(timeout=60)
         self.inter = inter
         self.old_channel = old_channel
@@ -59,6 +59,7 @@ class Ticket(Cog):
 
         if not self.persistent_views_added:
             self.bot.add_view(CloseView())
+            self.bot.add_view(CloseRequest())
             self.persistent_views_added = True
 
     @slash_command(name="close", description="close a ticket")
