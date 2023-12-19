@@ -3,6 +3,7 @@ from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 import nextcord
 from .utils.colors import CLOSE_REQUEST
+from views.close import CloseView
 
 CLOSED_CATEGORY = int(getenv("CLOSED_CATEGORY"))
 
@@ -28,22 +29,6 @@ class CloseRequest(nextcord.ui.View):
             )
             await self.inter.channel.edit(category=category)
             await inter.channel.send("Request denied!")
-
-
-class CloseView(nextcord.ui.View):
-    def __init__(self, inter=None):
-        super().__init__(timeout=60)
-        self.inter = inter
-
-    @nextcord.ui.button(label="Acknowledge", style=nextcord.ButtonStyle.blurple)
-    async def accept(self, button: nextcord.ui.Button, inter: nextcord.Interaction):
-        category = nextcord.utils.get(inter.guild.categories, id=CLOSED_CATEGORY)
-        await self.inter.channel.send("Closing ticket...")
-        await self.inter.channel.edit(category=category)
-        await self.inter.channel.set_permissions(
-            self.inter.user, read_messages=False, send_messages=False
-        )
-        # FIXME: duplicate?
 
 
 class Ticket(Cog):
