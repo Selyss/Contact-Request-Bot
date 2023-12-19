@@ -63,7 +63,7 @@ class TicketView(nextcord.ui.View):
 
 
 class QuickResponse(nextcord.ui.Modal):
-    def __init__(self, person, message) -> None:
+    def __init__(self, person, message, full) -> None:
         super().__init__(
             title="Quick Response",
             custom_id="ticket:quickresponse",
@@ -71,6 +71,7 @@ class QuickResponse(nextcord.ui.Modal):
         )
         self.person = person
         self.message = message
+        self.full = full
 
         self.details = nextcord.ui.TextInput(
             label="Response",
@@ -87,8 +88,15 @@ class QuickResponse(nextcord.ui.Modal):
             person = await inter.guild.fetch_member(self.person)
             id = person.id
             name = person.name
-            nick = person.nick
+            nick = person.global_name
             category = nextcord.utils.get(inter.guild.categories, id=CLOSED_CATEGORY)
+            ac = nextcord.Embed()
+            ac.title = "Accepted"
+            ac.color = SUCCESS
+            ac.set_author(icon_url=inter.user.avatar, name=inter.user.name)
+            ac.description = self.message
+            ac.set_footer(text=format_footer(inter.user.id))
+            await inter.message.edit(embed=ac)
             new_channel = await category.create_text_channel(
                 name=f"ticket-{name}",
                 reason=f"Created ticket for {id} - {name}",
@@ -110,9 +118,7 @@ class QuickResponse(nextcord.ui.Modal):
             # response msg
             em = nextcord.Embed()
             em.color = REPLY
-            em.set_author(
-                name=f"{inter.user.nick} replied:", icon_url=inter.user.avatar
-            )
+            em.set_author(name=f"{inter.user} replied:", icon_url=inter.user.avatar)
             em.description = self.details.value
             em.set_footer(text='Press "Acknowledge" to close.')
 
@@ -139,8 +145,14 @@ class RequestView(nextcord.ui.View):
         person = await inter.guild.fetch_member(msg)
         id = person.id
         name = person.name
-        nick = person.nick
-        await inter.message.delete()
+        nick = person.global_name
+        ac = nextcord.Embed()
+        ac.title = "Accepted"
+        ac.color = SUCCESS
+        ac.set_author(icon_url=inter.user.avatar, name=inter.user.name)
+        ac.description = content
+        ac.set_footer(text=format_footer(inter.user.id))
+        await inter.message.edit(embed=ac)
         em = nextcord.Embed()
         if inter.channel.id == AD_CHANNEL:
             # IS AD
@@ -206,7 +218,8 @@ class RequestView(nextcord.ui.View):
     async def quickresponse(self, btn: nextcord.ui.Button, inter: nextcord.Interaction):
         msg = await get_id_from_em(inter)
         content = inter.message.embeds[0].description
-        await inter.response.send_modal(QuickResponse(msg, content))
+        full = inter.message.embeds[0]
+        await inter.response.send_modal(QuickResponse(msg, content, full))
 
 
 class AdForm(nextcord.ui.Modal):
