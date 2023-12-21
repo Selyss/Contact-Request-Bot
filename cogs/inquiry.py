@@ -178,7 +178,7 @@ class RequestView(nextcord.ui.View):
             await new_channel.send(
                 content=f"<@{inter.user.id}> <@{ADVERTISING_ROLE}>",
                 embed=em,
-                view=AdView(PAID_CATEGORY),
+                view=AdView(PAID_CATEGORY, ADVERTISING_ROLE),
             )
             emb = nextcord.Embed()
             emb.color = AD_EM_COLOR

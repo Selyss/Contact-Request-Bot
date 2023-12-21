@@ -2,7 +2,7 @@ from os import getenv
 from nextcord import slash_command
 from nextcord.ext.commands import Bot, Cog
 import nextcord
-from .utils.colors import CLOSE_REQUEST
+from .utils.colors import CLOSE_REQUEST, REPLY
 from views.close import CloseView
 
 CLOSED_CATEGORY = int(getenv("CLOSED_CATEGORY"))
@@ -70,6 +70,21 @@ class Ticket(Cog):
         await inter.channel.send(
             embed=em, view=CloseRequest(inter=inter, old_channel=inter.channel)
         )
+
+    @slash_command(name="add", description="add a person to the ticket")
+    async def add(
+        self,
+        inter: nextcord.Interaction,
+        user: nextcord.Member = nextcord.SlashOption(required=True),
+    ):
+        em = nextcord.Embed()
+        em.color = REPLY
+        em.title = f"User Added"
+        em.description = f"<@{user.id}> has been added to this ticket."
+        await inter.channel.set_permissions(
+            user, read_messages=True, send_messages=True
+        )
+        await inter.channel.send(embed=em)
 
 
 def setup(bot: Bot) -> None:
