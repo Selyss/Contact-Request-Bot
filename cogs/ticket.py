@@ -50,7 +50,7 @@ class Ticket(Cog):
     @slash_command(name="close", description="close a ticket")
     async def close_ticket(self, inter: nextcord.Interaction):
         if inter.channel.category_id == CLOSED_CATEGORY:
-            await inter.send("This channel is already closed!", ephemeral=True)
+            await inter.channel.delete()
             return
         em = nextcord.Embed()
         em.title = "Ticket Closed"
