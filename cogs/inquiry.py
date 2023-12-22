@@ -18,6 +18,9 @@ TICKET_CATEGORY = int(getenv("TICKET_CATEGORY"))
 REQUEST_CHANNEL = int(getenv("REQUEST_CHANNEL"))
 ADVERTISING_ROLE = int(getenv("ADVERTISING_ROLE"))
 AD_CHANNEL = int(getenv("AD_CHANNEL"))
+DEPLOY_DESC = getenv("DEPLOY_DESC")
+FORM_TITLE = getenv("FORM_TITLE")
+PAYMENT_DESC = getenv("PAYMENT_DESC")
 
 
 class TicketView(nextcord.ui.View):
@@ -183,7 +186,7 @@ class RequestView(nextcord.ui.View):
             emb = nextcord.Embed()
             emb.color = AD_EM_COLOR
             emb.title = "__**Advertisement Services**__"
-            emb.description = """:bell: $40 = Ping @ everyone with ad message/links\n\n:gift: $45 = Hosted Nitro Giveaway Ad with @ everyone ping (Nitro must be supplied by the customer)\n\n*These prices apply to the Vanilla PvP Community/Tier List*"""
+            emb.description = PAYMENT_DESC
             await new_channel.send(embed=emb)
 
         else:
@@ -257,7 +260,7 @@ class AdForm(nextcord.ui.Modal):
 class QuestionForm(nextcord.ui.Modal):
     def __init__(self):
         super().__init__(
-            title="Contact Marlow",
+            title=FORM_TITLE,
             custom_id="questionform:question",
             timeout=None,
         )
@@ -311,12 +314,7 @@ class Inquiry(Cog):
         if isinstance(inter.channel, nextcord.TextChannel):
             em = nextcord.Embed(
                 title="📫 Contact Request",
-                description="""
-                Due to an influx of messages, I have decided to use requests to filter spam while still providing a means for important inquiries to be made.
-
-                I cannot guarantee a response to each inquiry.
-                Please reserve this system for important reasons.
-                """,
+                description=DEPLOY_DESC,
                 color=EMBED_COLOR,
             )
 

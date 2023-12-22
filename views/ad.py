@@ -1,5 +1,12 @@
 import nextcord
 from cogs.utils.colors import SUCCESS
+from os import getenv
+from dotenv.main import load_dotenv
+
+load_dotenv()
+
+AD_PAID_DESC = getenv("AD_PAID_DESC")
+AD_PAID_TITLE = getenv("AD_PAID_TITLE")
 
 
 class AdView(nextcord.ui.View):
@@ -13,12 +20,16 @@ class AdView(nextcord.ui.View):
     )
     async def paid(self, btn: nextcord.ui.Button, inter: nextcord.Interaction) -> None:
         if isinstance(inter.channel, nextcord.TextChannel):
-            print(self.advertising_role)
-            if inter.permissions.administrator or (nextcord.utils.get(inter.guild.roles, id=self.advertising_role) in inter.roles):
-                category = nextcord.utils.get(inter.guild.categories, id=self.paid_category)
+            if inter.permissions.administrator or (
+                nextcord.utils.get(inter.guild.roles, id=self.advertising_role)
+                in inter.roles
+            ):
+                category = nextcord.utils.get(
+                    inter.guild.categories, id=self.paid_category
+                )
                 await inter.channel.edit(category=category)
                 em = nextcord.Embed()
                 em.color = SUCCESS
-                em.title = ":checkmark: Payment Received"
-                em.description = """Thank you for your purchase!\nIf you haven't already, please send your advertisement message and ensure if you are using any custom/nitro-accessed Emojis that they are present within the Discord you are advertising (emojis from our server are fine, too).\n\nIf another advertisement was recently posted, out of courtesy it will be given a reasonable amount of uptime before yours is posted."""
+                em.title = AD_PAID_TITLE
+                em.description = AD_PAID_DESC
                 await inter.response.send_message(embed=em)
