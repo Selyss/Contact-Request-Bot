@@ -1,7 +1,9 @@
-import nextcord
-from cogs.utils.colors import SUCCESS
 from os import getenv
+
+import nextcord
 from dotenv.main import load_dotenv
+
+from cogs.utils.colors import SUCCESS
 
 load_dotenv()
 
@@ -22,7 +24,7 @@ class AdView(nextcord.ui.View):
         if isinstance(inter.channel, nextcord.TextChannel):
             if inter.permissions.administrator or (
                 nextcord.utils.get(inter.guild.roles, id=self.advertising_role)
-                in inter.roles
+                in inter.user.roles
             ):
                 category = nextcord.utils.get(
                     inter.guild.categories, id=self.paid_category
