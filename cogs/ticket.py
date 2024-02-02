@@ -56,7 +56,7 @@ class Ticket(Cog):
         em.title = "Ticket Closed"
         em.description = f"<@{inter.user.id}> has closed this ticket.\n\nPlease acknowledge this closure using the button below."
 
-        await inter.channel.send(embed=em, view=CloseView(inter=inter))
+        await inter.channel.send(embed=em, view=CloseView())
 
     @slash_command(name="closereq", description="request to close ticket")
     async def close_request(self, inter: nextcord.Interaction):
