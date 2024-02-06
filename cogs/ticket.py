@@ -10,7 +10,7 @@ CLOSED_CATEGORY = int(getenv("CLOSED_CATEGORY"))
 
 class CloseRequest(nextcord.ui.View):
     def __init__(self, inter=None, old_channel=None):
-        super().__init__(timeout=60)
+        super().__init__(timeout=None)
         self.inter = inter
         self.old_channel = old_channel
 
